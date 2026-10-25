@@ -1,0 +1,7 @@
+unit: auth-api
+commit: false
+candidate_splits:
+  - id: "backend/src/modules/auth/auth.routes.ts:34-58"
+    drivers: [concern_split, lifecycle_split]
+    rationale: "Account registration/login/session lifecycle is distinct from verification and password-recovery token flows, with separate rate limits and failure semantics."
+    source_slice: {file: backend/src/modules/auth/auth.routes.ts, lines: [34, 58]}

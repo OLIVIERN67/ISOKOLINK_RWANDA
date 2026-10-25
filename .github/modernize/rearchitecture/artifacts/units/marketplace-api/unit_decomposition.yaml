@@ -1,0 +1,7 @@
+unit: marketplace-api
+commit: false
+candidate_splits:
+  - id: "backend/src/modules/products/products.routes.ts:30-120"
+    drivers: [data_ownership_split, concern_split]
+    rationale: "Product inventory and reference/market-price catalogs are independently triggerable persistence surfaces even though the application mounts them together."
+    source_slice: {file: backend/src/modules/products/products.routes.ts, lines: [30, 120]}

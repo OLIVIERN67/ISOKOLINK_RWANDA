@@ -1,0 +1,7 @@
+unit: public-web
+commit: false
+candidate_splits:
+  - id: "frontend/src/App.tsx:58-70"
+    drivers: [concern_split, change_cadence_split]
+    rationale: "Marketplace browsing and static informational/legal pages have different data dependencies and release cadence while sharing public layout."
+    source_slice: {file: frontend/src/App.tsx, lines: [58, 70]}

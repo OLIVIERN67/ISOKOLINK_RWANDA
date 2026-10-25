@@ -1,0 +1,81 @@
+contracts:
+  - name: health-check
+    unit: health-api
+    type: rest
+    stability: must_preserve
+    source_loc: "backend/src/app.ts:82"
+    contract:
+      method: "GET"
+      path: "/api/health"
+      request: "none"
+      response: "{ success: true, data: { status, database, environment, uptimeSeconds } }"
+      error: "503 { success: false, error: { code: INTERNAL_ERROR, message } } when database query fails"
+      auth: "public"
+    target_contract:
+      method: "GET /api/health"
+      notes: "Preserve success envelope and 503 database-unavailable response."
+    semantic_divergence: []
+  - name: authentication-api
+    unit: auth-api
+    type: rest
+    stability: frozen
+    source_loc: "backend/src/modules/auth/auth.routes.ts:34"
+    contract:
+      method: "POST/GET"
+      path: "/api/auth/{register|login|logout|me|verify-email|resend-verification|forgot-password|reset-password|change-password}"
+      request: "Zod-validated auth payloads; /me and logout use cookie session"
+      response: "API envelope containing user or operation message"
+      error: "401/403 for unauthorized or inactive users; validation errors from shared error handler"
+      auth: "HttpOnly isokolink_sid cookie for protected operations"
+    target_contract:
+      method: "Preserve all listed routes and JSON envelope fields"
+      notes: "Keep rate limits, validation, cookie attributes, and development-token behavior."
+    semantic_divergence: []
+  - name: marketplace-api
+    unit: marketplace-api
+    type: rest
+    stability: frozen
+    source_loc: "backend/src/modules/products/products.routes.ts:30"
+    contract:
+      method: "GET/POST/PATCH/DELETE"
+      path: "/api/products, /api/seller/products, /api/categories, /api/markets, /api/locations, /api/units, /api/market-prices"
+      request: "Validated query, path, and JSON payloads"
+      response: "Paginated API envelopes for lists and resource envelopes for mutations"
+      error: "400 validation, 401/403 auth/role, 404 missing resource, shared API error envelope"
+      auth: "Public reads; seller/admin guards on writes and private views"
+    target_contract:
+      method: "Preserve route paths, pagination metadata, resource field names, and role guards"
+      notes: "Do not change product approval, availability, price, or ownership semantics."
+    semantic_divergence: []
+  - name: messaging-and-notifications-api
+    unit: messaging-notifications-api
+    type: rest
+    stability: frozen
+    source_loc: "backend/src/modules/messaging/messaging.routes.ts:25"
+    contract:
+      method: "GET/POST"
+      path: "/api/conversations/* and /api/notifications/*"
+      request: "Authenticated user IDs, pagination, message bodies, and read markers"
+      response: "Conversation/message/notification envelopes and unread counts"
+      error: "401/404/validation errors in shared envelope"
+      auth: "Authenticated session required"
+    target_contract:
+      method: "Preserve authenticated conversation and notification routes and read-state effects"
+      notes: "Unread counts and ownership checks are observable behavior."
+    semantic_divergence: []
+  - name: administrative-api
+    unit: admin-api
+    type: rest
+    stability: frozen
+    source_loc: "backend/src/modules/admin/admin.routes.ts:37"
+    contract:
+      method: "GET/POST/PATCH/DELETE"
+      path: "/api/admin/*"
+      request: "Admin-filtered queries and moderation/reference payloads"
+      response: "Dashboard, resource, paginated list, and no-content envelopes"
+      error: "401/403 role failures plus validation/not-found/conflict errors"
+      auth: "Active admin role required"
+    target_contract:
+      method: "Preserve admin route families, role checks, audit side effects, and response envelopes"
+      notes: "Admin reference, price, report, announcement, product, user, and audit surfaces are mounted under /api/admin."
+    semantic_divergence: []

@@ -1,0 +1,26 @@
+unit: reports-announcements-api
+side_effects:
+  - source_loc: "backend/src/modules/reports/reports.routes.ts:16"
+    effect: "create product report submitted by authenticated user"
+    must_preserve: true
+  - source_loc: "backend/src/modules/announcements/announcements.routes.ts:49"
+    effect: "create, update, or delete announcement and record actor/IP through service"
+    must_preserve: true
+branches:
+  - source_loc: "backend/src/modules/announcements/announcements.routes.ts:31"
+    condition: "audience query supplied"
+    behavior: "filter published announcements by all/buyers/sellers audience"
+    must_preserve: true
+error_paths:
+  - source_loc: "backend/src/modules/reports/reports.routes.ts:31"
+    trigger: "admin report update fails validation"
+    outcome: "reject update"
+    contract: "HTTP 400 API error envelope"
+    must_preserve: true
+concurrency:
+  model: async
+  tx_boundary:
+    source_loc: "backend/src/modules/reports/reports.service.ts:1"
+    scope: "report creation/listing/update and announcement persistence operations"
+    isolation: "database default"
+    must_preserve: true

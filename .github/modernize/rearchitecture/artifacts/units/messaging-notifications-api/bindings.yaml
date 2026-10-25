@@ -1,0 +1,9 @@
+unit: messaging-notifications-api
+bindings:
+  - type: route-declaration
+    name: "/api/conversations/* and /api/notifications/*"
+    source_loc: "backend/src/app.ts:109"
+    target: "authenticated Express routers"
+    must_appear_in_target: true
+    notes: "All routes require an active authenticated session."
+runtime_config: []

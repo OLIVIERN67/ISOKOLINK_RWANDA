@@ -1,0 +1,9 @@
+unit: reports-announcements-api
+bindings:
+  - type: route-declaration
+    name: "reports and announcements routers"
+    source_loc: "backend/src/app.ts:111"
+    target: "Express app mounts"
+    must_appear_in_target: true
+    notes: "Public announcements are separate from admin announcement management."
+runtime_config: []

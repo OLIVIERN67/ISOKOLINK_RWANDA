@@ -1,0 +1,7 @@
+unit: uploads-api
+commit: false
+candidate_splits:
+  - id: "backend/src/modules/uploads/uploads.routes.ts:10-25"
+    drivers: [concern_split]
+    rationale: "Product-image and profile-image uploads have different authorization guards and downstream ownership semantics."
+    source_slice: {file: backend/src/modules/uploads/uploads.routes.ts, lines: [10, 25]}

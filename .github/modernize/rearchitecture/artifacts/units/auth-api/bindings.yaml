@@ -1,0 +1,27 @@
+unit: auth-api
+bindings:
+  - type: route-declaration
+    name: "/api/auth/*"
+    source_loc: "backend/src/modules/auth/auth.routes.ts:32"
+    target: "Express Router mounted by app.ts"
+    must_appear_in_target: true
+    notes: "Routes combine Zod validation, rate limiting, async handler, and auth middleware."
+  - type: filter
+    name: "isokolink_sid cookie session"
+    source_loc: "backend/src/services/session.service.ts:39"
+    target: "cookie-parser plus attachUser"
+    must_appear_in_target: true
+    notes: "Cookie is HttpOnly, SameSite=Lax, and secure in production."
+runtime_config:
+  - key: "SESSION_SECRET"
+    source_loc: "backend/src/config/env.ts:40"
+    source: env
+    default_value: "development-only fallback"
+    must_appear_in_target: true
+    notes: "Production requires a strong value."
+  - key: "SESSION_TTL_HOURS"
+    source_loc: "backend/src/config/env.ts:41"
+    source: env
+    default_value: "168"
+    must_appear_in_target: true
+    notes: "Controls session expiry and cookie max age."

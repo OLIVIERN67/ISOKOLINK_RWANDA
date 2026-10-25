@@ -1,0 +1,7 @@
+unit: user-seller-api
+commit: false
+candidate_splits:
+  - id: "backend/src/modules/users/users.routes.ts:31-120"
+    drivers: [concern_split, data_ownership_split]
+    rationale: "Buyer account/profile and saved-product behavior share authentication but seller onboarding/profile behavior has a separate persisted profile lifecycle."
+    source_slice: {file: backend/src/modules/users/users.routes.ts, lines: [31, 120]}

@@ -1,0 +1,15 @@
+unit: seller-admin-web
+bindings:
+  - type: route-declaration
+    name: "Protected /seller/* route tree"
+    source_loc: "frontend/src/App.tsx:96"
+    target: "ProtectedRoute role=seller and DashboardLayout"
+    must_appear_in_target: true
+    notes: "Seller inventory/profile/conversation routes."
+  - type: route-declaration
+    name: "Protected /admin/* route tree"
+    source_loc: "frontend/src/App.tsx:109"
+    target: "ProtectedRoute role=admin and DashboardLayout"
+    must_appear_in_target: true
+    notes: "Admin moderation, reference, user, announcement, audit, messaging, and profile routes."
+runtime_config: []

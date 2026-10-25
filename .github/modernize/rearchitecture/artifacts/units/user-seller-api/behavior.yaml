@@ -1,0 +1,30 @@
+unit: user-seller-api
+side_effects:
+  - source_loc: "backend/src/modules/users/users.routes.ts:74"
+    effect: "create seller profile during become-seller flow"
+    must_preserve: true
+  - source_loc: "backend/src/modules/users/users.routes.ts:99"
+    effect: "deactivate account, delete user sessions, and clear session cookie"
+    must_preserve: true
+branches:
+  - source_loc: "backend/src/modules/users/users.routes.ts:96"
+    condition: "current user has admin role"
+    behavior: "deny self-deactivation"
+    must_preserve: true
+  - source_loc: "backend/src/middleware/auth.ts:48"
+    condition: "seller role/profile missing or seller suspended"
+    behavior: "deny seller-only operation with specific forbidden message"
+    must_preserve: true
+error_paths:
+  - source_loc: "backend/src/modules/users/users.routes.ts:127"
+    trigger: "invalid public seller id"
+    outcome: "bad request"
+    contract: "HTTP 400 API error envelope"
+    must_preserve: true
+concurrency:
+  model: async
+  tx_boundary:
+    source_loc: "backend/src/modules/users/users.service.ts:1"
+    scope: "profile, saved-product, onboarding, and deactivation persistence operations"
+    isolation: "database default"
+    must_preserve: true

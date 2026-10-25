@@ -1,0 +1,7 @@
+unit: reports-announcements-api
+commit: false
+candidate_splits:
+  - id: "backend/src/modules/announcements/announcements.routes.ts:28-77"
+    drivers: [lifecycle_split, concern_split]
+    rationale: "Public publication reads and authenticated/admin announcement management have different guards, payloads, and mutation side effects."
+    source_slice: {file: backend/src/modules/announcements/announcements.routes.ts, lines: [28, 77]}

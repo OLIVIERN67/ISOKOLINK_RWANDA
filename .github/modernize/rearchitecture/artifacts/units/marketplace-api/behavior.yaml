@@ -1,0 +1,30 @@
+unit: marketplace-api
+side_effects:
+  - source_loc: "backend/src/modules/products/products.routes.ts:71"
+    effect: "create seller product"
+    must_preserve: true
+  - source_loc: "backend/src/modules/products/products.routes.ts:113"
+    effect: "archive product and record request metadata"
+    must_preserve: true
+branches:
+  - source_loc: "backend/src/modules/products/products.routes.ts:41"
+    condition: "public product requested with optional authenticated user"
+    behavior: "return product view with user-specific saved state when available"
+    must_preserve: true
+  - source_loc: "backend/src/modules/products/products.routes.ts:49"
+    condition: "approval history requested by a user who does not own the product"
+    behavior: "return empty list rather than expose history"
+    must_preserve: true
+error_paths:
+  - source_loc: "backend/src/modules/products/products.routes.ts:37"
+    trigger: "invalid query/path/body"
+    outcome: "reject before service invocation"
+    contract: "HTTP 400 validation envelope"
+    must_preserve: true
+concurrency:
+  model: async
+  tx_boundary:
+    source_loc: "backend/src/modules/products/products.service.ts:1"
+    scope: "product ownership, approval, availability, reference-data, and price observation writes"
+    isolation: "database default"
+    must_preserve: true

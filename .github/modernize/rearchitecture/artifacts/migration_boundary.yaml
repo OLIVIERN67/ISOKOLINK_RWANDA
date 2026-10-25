@@ -1,0 +1,17 @@
+user_intent:
+  raw_request: "Analyse this folder."
+  inferred_acceptance:
+    - "Produce an evidence-based architecture description of the existing repository."
+    - "Do not change runtime behavior or infer a target framework."
+  cleanup_required: false
+strategy: minimal_runtime
+runtime_reachable: []
+must_rewrite: []
+copy_as_is: []
+legacy_allowed_to_remain: []
+defer_cleanup:
+  - "No migration or rewrite was requested; implementation scope is intentionally empty."
+full_rewrite_reason: null
+implementation_rule: >
+  This analysis contains no migration implementation scope. If a later migration is requested,
+  derive must_rewrite from the accepted target boundary rather than from source_anchors.

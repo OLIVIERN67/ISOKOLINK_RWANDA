@@ -1,0 +1,27 @@
+unit: auth-web
+side_effects:
+  - source_loc: "frontend/src/context/AuthContext.tsx:61"
+    effect: "update authenticated user context after login or registration"
+    must_preserve: true
+branches:
+  - source_loc: "frontend/src/context/AuthContext.tsx:45"
+    condition: "initial /auth/me refresh fails"
+    behavior: "clear user and finish loading"
+    must_preserve: true
+  - source_loc: "frontend/src/App.tsx:73"
+    condition: "authentication route selected"
+    behavior: "render AuthLayout and selected auth page"
+    must_preserve: true
+error_paths:
+  - source_loc: "frontend/src/context/AuthContext.tsx:77"
+    trigger: "logout request fails"
+    outcome: "clear local user state while warning in development"
+    contract: "logout remains locally effective"
+    must_preserve: true
+concurrency:
+  model: event-loop
+  tx_boundary:
+    source_loc: "frontend/src/context/AuthContext.tsx:45"
+    scope: "asynchronous auth API call and context state update"
+    isolation: "not applicable"
+    must_preserve: true

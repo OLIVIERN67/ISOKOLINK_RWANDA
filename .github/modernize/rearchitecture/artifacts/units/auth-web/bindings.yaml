@@ -1,0 +1,15 @@
+unit: auth-web
+bindings:
+  - type: route-declaration
+    name: "AuthLayout routes"
+    source_loc: "frontend/src/App.tsx:72"
+    target: "React Router Routes"
+    must_appear_in_target: true
+    notes: "Login, registration, verification, and password recovery pages."
+  - type: di-registration
+    name: "AuthProvider"
+    source_loc: "frontend/src/main.tsx:14"
+    target: "React context provider"
+    must_appear_in_target: true
+    notes: "Provider wraps the application and refreshes the cookie session."
+runtime_config: []

@@ -1,0 +1,15 @@
+unit: buyer-dashboard-web
+bindings:
+  - type: route-declaration
+    name: "Protected /dashboard/* route tree"
+    source_loc: "frontend/src/App.tsx:80"
+    target: "ProtectedRoute and DashboardLayout"
+    must_appear_in_target: true
+    notes: "Buyer workspace includes saved products, messaging, notifications, reports, profile, and security."
+  - type: di-registration
+    name: "ProtectedRoute"
+    source_loc: "frontend/src/components/ProtectedRoute.tsx:1"
+    target: "React route guard"
+    must_appear_in_target: true
+    notes: "Unauthenticated users cannot reach dashboard routes."
+runtime_config: []

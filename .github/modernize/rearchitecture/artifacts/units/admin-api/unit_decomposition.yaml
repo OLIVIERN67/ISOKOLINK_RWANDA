@@ -1,0 +1,7 @@
+unit: admin-api
+commit: false
+candidate_splits:
+  - id: "backend/src/modules/admin/admin.routes.ts:37-154"
+    drivers: [concern_split, change_cadence_split]
+    rationale: "Product moderation, user administration, dashboard aggregation, and audit queries have distinct business lifecycles and change independently."
+    source_slice: {file: backend/src/modules/admin/admin.routes.ts, lines: [37, 154]}

@@ -1,0 +1,9 @@
+unit: health-api
+bindings:
+  - type: route-declaration
+    name: "GET /api/health"
+    source_loc: "backend/src/app.ts:82"
+    target: "Express app"
+    must_appear_in_target: true
+    notes: "Public readiness/health endpoint."
+runtime_config: []

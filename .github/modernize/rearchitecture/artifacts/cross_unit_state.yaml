@@ -1,0 +1,43 @@
+flows:
+  - name: cookie-session-authentication
+    medium: cookie
+    key: isokolink_sid
+    writer:
+      unit: auth-api
+      source_loc: "backend/src/services/session.service.ts:39"
+    reader:
+      unit: user-seller-api
+      source_loc: "backend/src/middleware/auth.ts:8"
+    pairing: matched
+    must_preserve: true
+    must_confirm: null
+    verification_hint: "Authenticate in the browser, reload, and confirm /api/auth/me and protected routes retain the user."
+    notes: "HttpOnly SameSite cookie contains the raw token; database stores its SHA-256 hash."
+  - name: frontend-auth-context
+    medium: framework-context
+    key: AuthContext user
+    writer:
+      unit: auth-web
+      source_loc: "frontend/src/context/AuthContext.tsx:61"
+    reader:
+      unit: buyer-dashboard-web
+      source_loc: "frontend/src/context/AuthContext.tsx:115"
+    pairing: matched
+    must_preserve: true
+    must_confirm: null
+    verification_hint: "Login/logout and auth-change events must update protected navigation without a full page reload."
+    notes: "The context refreshes /auth/me on mount and after auth change events."
+  - name: language-preference
+    medium: static
+    key: isokolink-language
+    writer:
+      unit: public-web
+      source_loc: "frontend/src/context/I18nContext.tsx:117"
+    reader:
+      unit: auth-web
+      source_loc: "frontend/src/context/I18nContext.tsx:113"
+    pairing: dynamic-key
+    must_preserve: true
+    must_confirm: runtime
+    verification_hint: "Switch language, reload each route family, and verify the selected language persists."
+    notes: "Storage access is centralized but the key is a module constant and static analysis cannot prove all consumers."

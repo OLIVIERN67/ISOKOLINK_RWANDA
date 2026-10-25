@@ -1,0 +1,15 @@
+unit: admin-api
+bindings:
+  - type: route-declaration
+    name: "/api/admin/*"
+    source_loc: "backend/src/modules/admin/admin.routes.ts:37"
+    target: "Express admin router plus admin subrouters"
+    must_appear_in_target: true
+    notes: "requireAdmin is applied at router scope or subrouter scope."
+  - type: filter
+    name: "requireAdmin"
+    source_loc: "backend/src/modules/admin/admin.routes.ts:3"
+    target: "active admin role guard"
+    must_appear_in_target: true
+    notes: "Role guard is part of the administrative wire contract."
+runtime_config: []

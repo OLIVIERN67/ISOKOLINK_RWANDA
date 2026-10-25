@@ -1,0 +1,23 @@
+unit: public-web
+side_effects:
+  - source_loc: "frontend/src/context/I18nContext.tsx:117"
+    effect: "persist selected language in browser local storage"
+    must_preserve: true
+branches:
+  - source_loc: "frontend/src/App.tsx:58"
+    condition: "route matches public marketplace or informational path"
+    behavior: "render PublicLayout and corresponding page; unknown routes render NotFoundPage"
+    must_preserve: true
+error_paths:
+  - source_loc: "frontend/src/pages/NotFoundPage.tsx:1"
+    trigger: "unmatched browser route"
+    outcome: "render not-found page"
+    contract: "client-side not-found view"
+    must_preserve: true
+concurrency:
+  model: event-loop
+  tx_boundary:
+    source_loc: "frontend/src/services/api.ts:40"
+    scope: "each Axios request/response lifecycle"
+    isolation: "not applicable"
+    must_preserve: true

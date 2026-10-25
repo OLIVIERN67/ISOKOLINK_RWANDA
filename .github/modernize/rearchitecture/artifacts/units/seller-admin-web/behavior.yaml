@@ -1,0 +1,30 @@
+unit: seller-admin-web
+side_effects:
+  - source_loc: "frontend/src/pages/seller/SellerProductFormPage.tsx:1"
+    effect: "submit seller product create/update and upload image data through API client"
+    must_preserve: true
+  - source_loc: "frontend/src/pages/admin/AdminProductsPage.tsx:1"
+    effect: "submit administrative moderation actions and refresh product lists"
+    must_preserve: true
+branches:
+  - source_loc: "frontend/src/App.tsx:96"
+    condition: "user lacks seller role/profile"
+    behavior: "seller ProtectedRoute denies seller workspace"
+    must_preserve: true
+  - source_loc: "frontend/src/App.tsx:109"
+    condition: "user lacks admin role"
+    behavior: "admin ProtectedRoute denies admin workspace"
+    must_preserve: true
+error_paths:
+  - source_loc: "frontend/src/pages/admin/AdminDashboardPage.tsx:1"
+    trigger: "admin API request fails"
+    outcome: "page-level error state/toast through shared API error handling"
+    contract: "preserve API error message and role denial behavior"
+    must_preserve: true
+concurrency:
+  model: event-loop
+  tx_boundary:
+    source_loc: "frontend/src/services/api.ts:40"
+    scope: "seller/admin API request and page state refresh"
+    isolation: "not applicable"
+    must_preserve: true

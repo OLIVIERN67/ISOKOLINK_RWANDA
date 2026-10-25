@@ -1,0 +1,7 @@
+unit: auth-web
+commit: false
+candidate_splits:
+  - id: "frontend/src/pages/auth:1-200"
+    drivers: [lifecycle_split, concern_split]
+    rationale: "Interactive account entry and account recovery/verification are separate user journeys with different API contracts and navigation outcomes."
+    source_slice: {file: frontend/src/pages/auth, lines: [1, 200]}

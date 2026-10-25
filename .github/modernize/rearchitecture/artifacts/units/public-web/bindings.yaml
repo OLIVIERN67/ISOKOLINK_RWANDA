@@ -1,0 +1,15 @@
+unit: public-web
+bindings:
+  - type: route-declaration
+    name: "PublicLayout routes"
+    source_loc: "frontend/src/App.tsx:57"
+    target: "React Router Routes"
+    must_appear_in_target: true
+    notes: "Includes marketplace, seller storefront, information, and fallback pages."
+runtime_config:
+  - key: "VITE_API_URL"
+    source_loc: "frontend/src/services/api.ts:41"
+    source: env
+    default_value: "backend API base URL from frontend environment"
+    must_appear_in_target: true
+    notes: "Axios base URL used by public pages."

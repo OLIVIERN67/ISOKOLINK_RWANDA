@@ -1,0 +1,7 @@
+unit: seller-admin-web
+commit: false
+candidate_splits:
+  - id: "frontend/src/pages/seller and frontend/src/pages/admin:1-200"
+    drivers: [concern_split, nfr_split, change_cadence_split]
+    rationale: "Seller workspace and admin workspace have distinct authorization boundaries, navigation, workflows, and operational risk despite sharing dashboard primitives."
+    source_slice: {file: frontend/src/pages, lines: [1, 200]}

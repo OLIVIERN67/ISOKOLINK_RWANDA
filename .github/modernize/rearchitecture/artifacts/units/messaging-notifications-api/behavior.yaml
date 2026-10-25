@@ -1,0 +1,29 @@
+unit: messaging-notifications-api
+side_effects:
+  - source_loc: "backend/src/modules/messaging/messaging.routes.ts:45"
+    effect: "create conversation and participant records"
+    must_preserve: true
+  - source_loc: "backend/src/modules/messaging/messaging.routes.ts:63"
+    effect: "create message and update conversation state"
+    must_preserve: true
+  - source_loc: "backend/src/modules/notifications/notifications.routes.ts:88"
+    effect: "mark one or all user notifications read with timestamp"
+    must_preserve: true
+branches:
+  - source_loc: "backend/src/modules/messaging/messaging.routes.ts:42"
+    condition: "sender has seller business name"
+    behavior: "use business name, otherwise full name, for message/conversation sender display"
+    must_preserve: true
+error_paths:
+  - source_loc: "backend/src/modules/notifications/notifications.routes.ts:82"
+    trigger: "notification does not belong to current user"
+    outcome: "not found error"
+    contract: "HTTP 404 API error envelope"
+    must_preserve: true
+concurrency:
+  model: async
+  tx_boundary:
+    source_loc: "backend/src/modules/messaging/messaging.service.ts:1"
+    scope: "conversation membership, message creation, and notification read updates"
+    isolation: "database default"
+    must_preserve: true

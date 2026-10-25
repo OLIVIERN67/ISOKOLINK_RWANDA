@@ -1,0 +1,71 @@
+modules:
+  - name: auth-context-and-session
+    kind: store
+    source_loc: "frontend/src/context/AuthContext.tsx:39"
+    used_by_units: [auth-web, buyer-dashboard-web, seller-admin-web]
+    fields:
+      - name: user
+        type: "AuthUser | null"
+      - name: loading
+        type: "boolean"
+      - name: login
+        type: "(email: string, password: string) => Promise<AuthUser>"
+      - name: logout
+        type: "() => Promise<void>"
+      - name: hasRole
+        type: "(role: string) => boolean"
+    god_class: false
+    split_candidate: false
+    migration_strategy: wrap
+    notes: "Cross-route authentication state and cookie-session refresh boundary."
+  - name: backend-auth-middleware
+    kind: config
+    source_loc: "backend/src/middleware/auth.ts:5"
+    used_by_units: [auth-api, user-seller-api, marketplace-api, messaging-notifications-api, reports-announcements-api, admin-api, uploads-api]
+    fields:
+      - name: requireAuth
+        type: "(req, res, next) => void"
+      - name: requireAdmin
+        type: "RequestHandler"
+      - name: requireSeller
+        type: "RequestHandler"
+      - name: attachUser
+        type: "RequestHandler"
+    god_class: false
+    split_candidate: false
+    migration_strategy: wrap
+    notes: "Shared cookie-session authentication and role guards."
+  - name: api-client
+    kind: utility
+    source_loc: "frontend/src/services/api.ts:40"
+    used_by_units: [public-web, auth-web, buyer-dashboard-web, seller-admin-web]
+    fields:
+      - name: api
+        type: "AxiosInstance"
+      - name: authApi
+        type: "AuthApi"
+      - name: productApi
+        type: "ProductApi"
+      - name: adminApi
+        type: "AdminApi"
+    god_class: true
+    split_candidate: true
+    migration_strategy: split
+    notes: "Single client module covers authentication, marketplace, dashboards, messaging, and admin calls."
+  - name: mysql-pool-and-transaction
+    kind: utility
+    source_loc: "backend/src/db/pool.ts:9"
+    used_by_units: [health-api, auth-api, user-seller-api, marketplace-api, messaging-notifications-api, reports-announcements-api, admin-api]
+    fields:
+      - name: pool
+        type: "mysql.Pool"
+      - name: query
+        type: "generic query helper"
+      - name: execute
+        type: "parameterized execute helper"
+      - name: withTransaction
+        type: "transaction wrapper"
+    god_class: false
+    split_candidate: false
+    migration_strategy: wrap
+    notes: "Shared persistence boundary and transaction helper."

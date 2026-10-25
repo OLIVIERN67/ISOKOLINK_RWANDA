@@ -1,0 +1,23 @@
+unit: uploads-api
+side_effects:
+  - source_loc: "backend/src/modules/uploads/uploads.routes.ts:15"
+    effect: "persist validated multipart image and return its URL"
+    must_preserve: true
+branches:
+  - source_loc: "backend/src/modules/uploads/uploads.routes.ts:14"
+    condition: "multipart file is absent"
+    behavior: "reject upload with bad-request message"
+    must_preserve: true
+error_paths:
+  - source_loc: "backend/src/modules/uploads/uploads.routes.ts:14"
+    trigger: "no image selected or upload validation failure"
+    outcome: "bad request"
+    contract: "HTTP 400 API error envelope"
+    must_preserve: true
+concurrency:
+  model: async
+  tx_boundary:
+    source_loc: "backend/src/modules/uploads/uploads.routes.ts:10"
+    scope: "single multipart file persistence operation"
+    isolation: "filesystem operation"
+    must_preserve: true

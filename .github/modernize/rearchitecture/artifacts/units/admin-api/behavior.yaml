@@ -1,0 +1,30 @@
+unit: admin-api
+side_effects:
+  - source_loc: "backend/src/modules/admin/admin.routes.ts:68"
+    effect: "moderate products through approve/reject/correction/suspend/reinstate operations"
+    must_preserve: true
+  - source_loc: "backend/src/modules/admin/admin.routes.ts:123"
+    effect: "change user status/roles and record administrative actor/IP"
+    must_preserve: true
+branches:
+  - source_loc: "backend/src/middleware/auth.ts:37"
+    condition: "authenticated user lacks admin role"
+    behavior: "deny all admin routes"
+    must_preserve: true
+  - source_loc: "backend/src/modules/admin/admin.routes.ts:77"
+    condition: "moderation reason required"
+    behavior: "reject moderation action without valid reason"
+    must_preserve: true
+error_paths:
+  - source_loc: "backend/src/modules/admin/admin.routes.ts:37"
+    trigger: "missing/inactive/non-admin session"
+    outcome: "unauthorized or forbidden response"
+    contract: "HTTP 401/403 API error envelope"
+    must_preserve: true
+concurrency:
+  model: async
+  tx_boundary:
+    source_loc: "backend/src/modules/admin/admin.service.ts:1"
+    scope: "moderation, role/status changes, dashboard queries, and audit-log reads/writes"
+    isolation: "database default"
+    must_preserve: true

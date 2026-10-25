@@ -1,0 +1,24 @@
+unit: health-api
+side_effects: []
+branches:
+  - source_loc: "backend/src/app.ts:84"
+    condition: "database SELECT 1 succeeds"
+    behavior: "return HTTP 200 success envelope with database connected and process metadata"
+    must_preserve: true
+  - source_loc: "backend/src/app.ts:93"
+    condition: "database query throws"
+    behavior: "return HTTP 503 database unavailable error envelope"
+    must_preserve: true
+error_paths:
+  - source_loc: "backend/src/app.ts:93"
+    trigger: "database connectivity failure"
+    outcome: "service-unavailable response"
+    contract: "503 { success: false, error: { code: INTERNAL_ERROR, message } }"
+    must_preserve: true
+concurrency:
+  model: async
+  tx_boundary:
+    source_loc: "backend/src/app.ts:82"
+    scope: "single asynchronous SELECT 1 health probe"
+    isolation: "database default"
+    must_preserve: true

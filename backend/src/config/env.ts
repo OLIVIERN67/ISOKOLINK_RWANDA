@@ -1,0 +1,105 @@
+import path from "node:path";
+import dotenv from "dotenv";
+import { z } from "zod";
+
+dotenv.config();
+
+const boolFromString = (defaultValue: boolean) =>
+  z
+    .union([z.boolean(), z.string()])
+    .optional()
+    .transform((value) => {
+      if (value === undefined) return defaultValue;
+      if (typeof value === "boolean") return value;
+      return value.toLowerCase() === "true" || value === "1";
+    });
+
+const numberFromString = (defaultValue: number) =>
+  z
+    .union([z.number(), z.string()])
+    .optional()
+    .transform((value) => {
+      if (value === undefined || value === "") return defaultValue;
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : defaultValue;
+    });
+
+const baseSchema = z.object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  PORT: numberFromString(5000),
+  FRONTEND_URL: z.string().default("http://localhost:5173"),
+  API_PUBLIC_URL: z.string().default("http://localhost:5000"),
+  DB_HOST: z.string().default("localhost"),
+  DB_PORT: numberFromString(3306),
+  DB_NAME: z.string().default("isokolink_rwanda"),
+  DB_USER: z.string().default("root"),
+  DB_PASSWORD: z.string().default(""),
+  DB_CONNECTION_LIMIT: numberFromString(10),
+  SESSION_SECRET: z.string().optional(),
+  SESSION_TTL_HOURS: numberFromString(168),
+  COOKIE_DOMAIN: z.string().optional(),
+  COOKIE_SECURE: boolFromString(false),
+  EMAIL_VERIFICATION_TTL_MINUTES: numberFromString(1440),
+  PASSWORD_RESET_TTL_MINUTES: numberFromString(30),
+  UPLOAD_DIR: z.string().default("uploads"),
+  MAX_UPLOAD_BYTES: numberFromString(5 * 1024 * 1024),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: numberFromString(587),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASSWORD: z.string().optional(),
+  SMTP_FROM: z.string().optional(),
+  EXPOSE_DEV_TOKENS: boolFromString(true),
+});
+
+const parsed = baseSchema.safeParse(process.env);
+
+if (!parsed.success) {
+  const details = parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");
+  throw new Error(`Invalid environment configuration: ${details}`);
+}
+
+const raw = parsed.data;
+const isProduction = raw.NODE_ENV === "production";
+
+let sessionSecret = raw.SESSION_SECRET;
+if (isProduction) {
+  if (!sessionSecret || sessionSecret.length < 32 || sessionSecret.includes("replace_with")) {
+    throw new Error("SESSION_SECRET must be set to a strong 32+ character value in production.");
+  }
+} else if (!sessionSecret) {
+  sessionSecret = "dev-only-insecure-session-secret-change-me-please";
+}
+
+export const env = {
+  nodeEnv: raw.NODE_ENV,
+  isProduction,
+  isTest: raw.NODE_ENV === "test",
+  port: raw.PORT,
+  frontendUrl: raw.FRONTEND_URL.replace(/\/$/, ""),
+  apiPublicUrl: raw.API_PUBLIC_URL.replace(/\/$/, ""),
+  db: {
+    host: raw.DB_HOST,
+    port: raw.DB_PORT,
+    name: raw.DB_NAME,
+    user: raw.DB_USER,
+    password: raw.DB_PASSWORD,
+    connectionLimit: raw.DB_CONNECTION_LIMIT,
+  },
+  sessionSecret,
+  sessionTtlHours: raw.SESSION_TTL_HOURS,
+  cookieDomain: raw.COOKIE_DOMAIN || undefined,
+  cookieSecure: isProduction ? true : raw.COOKIE_SECURE,
+  emailVerificationTtlMinutes: raw.EMAIL_VERIFICATION_TTL_MINUTES,
+  passwordResetTtlMinutes: raw.PASSWORD_RESET_TTL_MINUTES,
+  uploadDir: path.resolve(process.cwd(), raw.UPLOAD_DIR),
+  maxUploadBytes: raw.MAX_UPLOAD_BYTES,
+  smtp: {
+    host: raw.SMTP_HOST || "",
+    port: raw.SMTP_PORT,
+    user: raw.SMTP_USER || "",
+    password: raw.SMTP_PASSWORD || "",
+    from: raw.SMTP_FROM || "",
+  },
+  exposeDevTokens: isProduction ? false : raw.EXPOSE_DEV_TOKENS,
+  sessionCookieName: "isokolink_sid",
+};

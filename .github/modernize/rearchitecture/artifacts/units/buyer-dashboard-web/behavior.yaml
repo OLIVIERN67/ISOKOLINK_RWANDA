@@ -1,0 +1,27 @@
+unit: buyer-dashboard-web
+side_effects:
+  - source_loc: "frontend/src/context/AuthContext.tsx:91"
+    effect: "broadcast authentication changes and refresh protected dashboard state"
+    must_preserve: true
+branches:
+  - source_loc: "frontend/src/App.tsx:80"
+    condition: "no authenticated user"
+    behavior: "ProtectedRoute redirects/blocks access to dashboard routes"
+    must_preserve: true
+  - source_loc: "frontend/src/App.tsx:84"
+    condition: "buyer dashboard child route selected"
+    behavior: "render the matching dashboard page inside buyer DashboardLayout"
+    must_preserve: true
+error_paths:
+  - source_loc: "frontend/src/components/ErrorBoundary.tsx:1"
+    trigger: "rendering exception in dashboard tree"
+    outcome: "render error boundary fallback"
+    contract: "user-visible recoverable error view"
+    must_preserve: true
+concurrency:
+  model: event-loop
+  tx_boundary:
+    source_loc: "frontend/src/services/api.ts:40"
+    scope: "dashboard API request and state update"
+    isolation: "not applicable"
+    must_preserve: true

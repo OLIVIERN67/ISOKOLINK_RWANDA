@@ -1,0 +1,35 @@
+unit: auth-api
+side_effects:
+  - source_loc: "backend/src/services/session.service.ts:39"
+    effect: "create hashed database session and set HttpOnly cookie on successful login/registration"
+    must_preserve: true
+  - source_loc: "backend/src/modules/auth/auth.controller.ts:1"
+    effect: "send verification/reset mail when configured and expose development tokens only outside production"
+    must_preserve: true
+branches:
+  - source_loc: "backend/src/middleware/auth.ts:22"
+    condition: "session absent or inactive"
+    behavior: "reject protected auth operation with unauthorized/forbidden response"
+    must_preserve: true
+  - source_loc: "backend/src/config/env.ts:53"
+    condition: "production session secret missing or weak"
+    behavior: "fail process configuration validation"
+    must_preserve: true
+error_paths:
+  - source_loc: "backend/src/modules/auth/auth.routes.ts:34"
+    trigger: "invalid registration/login/recovery payload"
+    outcome: "validation error through shared error handler"
+    contract: "HTTP 400 API error envelope"
+    must_preserve: true
+  - source_loc: "backend/src/middleware/auth.ts:22"
+    trigger: "missing or invalid session"
+    outcome: "protected endpoint rejected"
+    contract: "HTTP 401/403 API error envelope"
+    must_preserve: true
+concurrency:
+  model: async
+  tx_boundary:
+    source_loc: "backend/src/modules/auth/auth.service.ts:1"
+    scope: "service-level user/token/session persistence operations; exact method scope is service-defined"
+    isolation: "database default unless service transaction wrapper is used"
+    must_preserve: true

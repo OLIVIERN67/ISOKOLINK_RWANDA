@@ -1,0 +1,15 @@
+unit: marketplace-api
+bindings:
+  - type: route-declaration
+    name: "product, reference, and market-price routers"
+    source_loc: "backend/src/app.ts:104"
+    target: "Express app mounts"
+    must_appear_in_target: true
+    notes: "Public, seller, and admin route variants are mounted at distinct prefixes."
+  - type: convention
+    name: "Zod request validation"
+    source_loc: "backend/src/modules/products/products.routes.ts:37"
+    target: "route-level validation middleware"
+    must_appear_in_target: true
+    notes: "Query, params, and body schemas are applied before services."
+runtime_config: []

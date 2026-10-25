@@ -1,0 +1,7 @@
+unit: messaging-notifications-api
+commit: false
+candidate_splits:
+  - id: "backend/src/modules/messaging/messaging.routes.ts:25-72"
+    drivers: [concern_split, data_ownership_split]
+    rationale: "Conversation/message ownership and notification read-state are separate persisted concerns with independent consumers and unread-count contracts."
+    source_slice: {file: backend/src/modules/messaging/messaging.routes.ts, lines: [25, 72]}

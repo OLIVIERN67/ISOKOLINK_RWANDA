@@ -1,0 +1,124 @@
+units:
+  - name: health-api
+    trigger: api
+    trigger_detail: "GET /api/health"
+    source_anchors: [{path: backend/src/app.ts, line: 82}]
+    exported_signature: [{method: "GET /api/health -> JSON health envelope", source_loc: "backend/src/app.ts:82", stability: must_preserve}]
+    dynamic_entrypoints: []
+    depends_on: [{unit: mysql-pool, via: "queryOne SELECT 1"}]
+    shared_refs: [{module: mysql-pool-and-transaction, used_fields: [pool, query]}]
+  - name: auth-api
+    trigger: api
+    trigger_detail: "POST/GET /api/auth/*"
+    source_anchors: [{path: backend/src/modules/auth/auth.routes.ts, line: 32}]
+    exported_signature: [{method: "auth routes -> API envelopes and session cookie", source_loc: "backend/src/modules/auth/auth.routes.ts:34", stability: frozen}]
+    dynamic_entrypoints: [{target: "auth controller handlers", mechanism: annotation-scan, source_loc: "backend/src/modules/auth/auth.routes.ts:18"}]
+    depends_on: []
+    shared_refs:
+      - {module: backend-auth-middleware, used_fields: [requireAuth, attachUser]}
+      - {module: mysql-pool-and-transaction, used_fields: [pool, query, execute, withTransaction]}
+  - name: user-seller-api
+    trigger: api
+    trigger_detail: "Authenticated /api/users/* and public /api/sellers/:id"
+    source_anchors: [{path: backend/src/modules/users/users.routes.ts, line: 31}]
+    exported_signature: [{method: "users/seller routes -> profile, saved products, seller onboarding", source_loc: "backend/src/modules/users/users.routes.ts:31", stability: must_preserve}]
+    dynamic_entrypoints: []
+    depends_on: [{unit: marketplace-api, via: "saved product and seller product data"}]
+    shared_refs:
+      - {module: backend-auth-middleware, used_fields: [requireAuth, requireSeller]}
+      - {module: mysql-pool-and-transaction, used_fields: [pool, query, execute]}
+  - name: marketplace-api
+    trigger: api
+    trigger_detail: "Products, reference data, and market-price REST routes"
+    source_anchors:
+      - {path: backend/src/modules/products/products.routes.ts, line: 30}
+      - {path: backend/src/modules/reference/reference.routes.ts, line: 66}
+      - {path: backend/src/modules/market-prices/marketPrices.routes.ts, line: 24}
+    exported_signature: [{method: "marketplace route families -> paginated products/reference/prices", source_loc: "backend/src/modules/products/products.routes.ts:30", stability: frozen}]
+    dynamic_entrypoints: []
+    depends_on: []
+    shared_refs:
+      - {module: backend-auth-middleware, used_fields: [requireAuth, requireSeller, requireAdmin]}
+      - {module: mysql-pool-and-transaction, used_fields: [pool, query, execute, withTransaction]}
+  - name: messaging-notifications-api
+    trigger: api
+    trigger_detail: "Authenticated /api/conversations/* and /api/notifications/*"
+    source_anchors:
+      - {path: backend/src/modules/messaging/messaging.routes.ts, line: 25}
+      - {path: backend/src/modules/notifications/notifications.routes.ts, line: 21}
+    exported_signature: [{method: "conversation and notification routes -> messages, read state, unread counts", source_loc: "backend/src/modules/messaging/messaging.routes.ts:25", stability: frozen}]
+    dynamic_entrypoints: []
+    depends_on: []
+    shared_refs:
+      - {module: backend-auth-middleware, used_fields: [requireAuth]}
+      - {module: mysql-pool-and-transaction, used_fields: [pool, query, execute]}
+  - name: reports-announcements-api
+    trigger: api
+    trigger_detail: "Authenticated reports and public/admin announcements"
+    source_anchors:
+      - {path: backend/src/modules/reports/reports.routes.ts, line: 13}
+      - {path: backend/src/modules/announcements/announcements.routes.ts, line: 28}
+    exported_signature: [{method: "reports and announcement routes -> report workflow and publication lists", source_loc: "backend/src/modules/reports/reports.routes.ts:13", stability: must_preserve}]
+    dynamic_entrypoints: []
+    depends_on: []
+    shared_refs:
+      - {module: backend-auth-middleware, used_fields: [requireAuth, requireAdmin]}
+      - {module: mysql-pool-and-transaction, used_fields: [pool, query, execute]}
+  - name: admin-api
+    trigger: api
+    trigger_detail: "GET/POST/PATCH/DELETE /api/admin/*"
+    source_anchors: [{path: backend/src/modules/admin/admin.routes.ts, line: 37}]
+    exported_signature: [{method: "admin route families -> moderation, users, stats, audit, references", source_loc: "backend/src/modules/admin/admin.routes.ts:37", stability: frozen}]
+    dynamic_entrypoints: []
+    depends_on: [ {unit: marketplace-api, via: "product/reference/price administration"} ]
+    shared_refs:
+      - {module: backend-auth-middleware, used_fields: [requireAdmin]}
+      - {module: mysql-pool-and-transaction, used_fields: [pool, query, execute, withTransaction]}
+  - name: uploads-api
+    trigger: api
+    trigger_detail: "POST /api/uploads/product-image and /api/uploads/profile-image"
+    source_anchors: [{path: backend/src/modules/uploads/uploads.routes.ts, line: 8}]
+    exported_signature: [{method: "POST upload -> { url }", source_loc: "backend/src/modules/uploads/uploads.routes.ts:10", stability: must_preserve}]
+    dynamic_entrypoints: []
+    depends_on: []
+    shared_refs: [{module: backend-auth-middleware, used_fields: [requireAuth, requireSeller]}]
+  - name: public-web
+    trigger: page
+    trigger_detail: "Public marketplace and informational routes"
+    source_anchors: [{path: frontend/src/pages/HomePage.tsx}, {path: frontend/src/pages/ProductsPage.tsx}, {path: frontend/src/components/PublicLayout.tsx}]
+    exported_signature: [{method: "Browser routes /, /products, /prices, /sellers/:id and informational pages", source_loc: "frontend/src/App.tsx:58", stability: must_preserve}]
+    dynamic_entrypoints: []
+    depends_on: [{unit: marketplace-api, via: "frontend API client"}]
+    shared_refs:
+      - {module: api-client, used_fields: [api, productApi]}
+      - {module: auth-context-and-session, used_fields: [user, loading]}
+  - name: auth-web
+    trigger: page
+    trigger_detail: "Browser routes /login, /register, /forgot-password, /reset-password, /verify-email"
+    source_anchors: [{path: frontend/src/pages/auth/LoginPage.tsx}, {path: frontend/src/pages/auth/RegisterPage.tsx}, {path: frontend/src/pages/auth/AuthLayout.tsx}]
+    exported_signature: [{method: "Auth pages -> session creation and account recovery flows", source_loc: "frontend/src/App.tsx:73", stability: frozen}]
+    dynamic_entrypoints: []
+    depends_on: [{unit: auth-api, via: "authApi client"}]
+    shared_refs:
+      - {module: api-client, used_fields: [api, authApi]}
+      - {module: auth-context-and-session, used_fields: [user, loading, login, logout]}
+  - name: buyer-dashboard-web
+    trigger: page
+    trigger_detail: "Protected /dashboard/* routes"
+    source_anchors: [{path: frontend/src/pages/dashboard/DashboardHomePage.tsx}, {path: frontend/src/components/DashboardLayout.tsx}]
+    exported_signature: [{method: "Buyer dashboard routes -> saved products, conversations, reports, profile, settings", source_loc: "frontend/src/App.tsx:81", stability: must_preserve}]
+    dynamic_entrypoints: []
+    depends_on: [{unit: user-seller-api, via: "userApi client"}, {unit: messaging-notifications-api, via: "conversation/notification clients"}]
+    shared_refs:
+      - {module: api-client, used_fields: [api, productApi]}
+      - {module: auth-context-and-session, used_fields: [user, loading, hasRole, logout]}
+  - name: seller-admin-web
+    trigger: page
+    trigger_detail: "Protected /seller/* and /admin/* routes"
+    source_anchors: [{path: frontend/src/pages/seller/SellerDashboardPage.tsx}, {path: frontend/src/pages/admin/AdminDashboardPage.tsx}]
+    exported_signature: [{method: "Seller/admin routes -> inventory, moderation, references, users, audit", source_loc: "frontend/src/App.tsx:97", stability: frozen}]
+    dynamic_entrypoints: []
+    depends_on: [{unit: marketplace-api, via: "seller and reference clients"}, {unit: admin-api, via: "admin client"}]
+    shared_refs:
+      - {module: api-client, used_fields: [api, adminApi]}
+      - {module: auth-context-and-session, used_fields: [user, loading, hasRole, logout]}

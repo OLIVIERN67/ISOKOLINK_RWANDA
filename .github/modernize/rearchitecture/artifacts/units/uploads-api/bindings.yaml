@@ -1,0 +1,21 @@
+unit: uploads-api
+bindings:
+  - type: route-declaration
+    name: "POST /api/uploads/product-image and /api/uploads/profile-image"
+    source_loc: "backend/src/modules/uploads/uploads.routes.ts:10"
+    target: "Express multer multipart routes"
+    must_appear_in_target: true
+    notes: "Product images require seller role; profile images require authentication."
+runtime_config:
+  - key: "UPLOAD_DIR"
+    source_loc: "backend/src/config/env.ts:47"
+    source: env
+    default_value: "uploads"
+    must_appear_in_target: true
+    notes: "Resolved relative to process working directory."
+  - key: "MAX_UPLOAD_BYTES"
+    source_loc: "backend/src/config/env.ts:48"
+    source: env
+    default_value: "5242880"
+    must_appear_in_target: true
+    notes: "Maximum configured upload size."

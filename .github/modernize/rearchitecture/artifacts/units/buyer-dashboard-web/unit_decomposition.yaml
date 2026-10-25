@@ -1,0 +1,7 @@
+unit: buyer-dashboard-web
+commit: false
+candidate_splits:
+  - id: "frontend/src/pages/dashboard:1-200"
+    drivers: [concern_split, change_cadence_split]
+    rationale: "Profile/security, marketplace browsing/saved products, and messaging/reporting are separate dashboard concerns with independent data and navigation states."
+    source_slice: {file: frontend/src/pages/dashboard, lines: [1, 200]}

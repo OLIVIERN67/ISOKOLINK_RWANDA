@@ -1,0 +1,15 @@
+unit: user-seller-api
+bindings:
+  - type: route-declaration
+    name: "/api/users/* and /api/sellers/:id"
+    source_loc: "backend/src/modules/users/users.routes.ts:31"
+    target: "Express Routers"
+    must_appear_in_target: true
+    notes: "User router is authenticated; seller public router exposes public seller data."
+  - type: filter
+    name: "requireSeller"
+    source_loc: "backend/src/modules/users/users.routes.ts:83"
+    target: "seller profile and role guard"
+    must_appear_in_target: true
+    notes: "Suspended sellers are denied."
+runtime_config: []
