@@ -37,8 +37,14 @@ export interface ApiErrorShape {
   details?: Array<{ field: string; message: string }>;
 }
 
+function resolveApiBaseUrl(value: string | undefined): string {
+  const configured = value?.trim().replace(/\/+$/, "");
+  if (!configured) return "/api";
+  return configured.endsWith("/api") ? configured : `${configured}/api`;
+}
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api",
+  baseURL: resolveApiBaseUrl(import.meta.env.VITE_API_URL),
   withCredentials: true,
   timeout: 20000,
   headers: { Accept: "application/json" },

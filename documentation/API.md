@@ -133,12 +133,15 @@ conversations they participate in.
 | GET | `/conversations/unread-count` | – |
 | POST | `/conversations` | `recipientId`, `productId?`, `subject?`, `message`. Cannot message yourself; starting an existing direct thread reuses it. |
 | GET | `/conversations/:id` | `before?` (message id), `limit?` |
-| POST | `/conversations/:id/messages` | `body` (1–4000 chars) |
+| POST | `/conversations/:id/messages` | `body` (1–5000 chars) |
 | POST | `/conversations/:id/read` | – |
 | POST | `/notifications/:id/read` | – |
 
-Admins may start a conversation with any user. New messages create a
-notification for the recipient pointing to the relevant workspace inbox.
+Buyers and sellers may start conversations with one another or contact an
+administrator; administrators may start a conversation with any active user.
+Product-linked threads require an approved, available listing and its seller.
+New messages create a notification that points to the recipient's workspace
+inbox. Conversation history remains restricted to its participants.
 
 ## Notifications
 
@@ -234,9 +237,10 @@ dashboard charts.
 ## Uploads
 
 Both endpoints require authentication and accept `multipart/form-data` with the
-file field named `image`. Maximum size is 5 MB; allowed types are JPEG, PNG,
-WebP and GIF. Responses contain a relative URL such as
-`{ "url": "/uploads/1720000000000-abc123.jpg" }`.
+file field named `image`. The default maximum size is 5 MB (configurable with
+`MAX_UPLOAD_BYTES`); allowed types are JPEG, PNG, and WebP. The API validates
+both the declared MIME type and the file signature. Responses contain a
+relative URL such as `{ "url": "/uploads/1720000000000-abc123.jpg" }`.
 
 | Method | Path | Notes |
 | ------ | ---- | ----- |
@@ -245,11 +249,15 @@ WebP and GIF. Responses contain a relative URL such as
 
 ## Rate limits
 
+Limits are route-specific; there is no global API limiter. The current
+`express-rate-limit` configuration uses the client IP as the key by default.
+
 | Scope | Limit |
 | ----- | ----- |
-| Global API | 300 requests / 15 minutes / IP |
-| Auth login/register/reset | 20 requests / 15 minutes / IP |
-| Writes (products, reports, applications) | 60 requests / 15 minutes / IP |
-| Messages | 60 messages / 10 minutes / user |
+| Login, email verification, password change | 30 requests / 15 minutes / IP |
+| Registration | 10 requests / hour / IP |
+| Resend verification, forgot password, reset password | 10 requests / hour / IP |
+| Seller application, product creation and edit, report creation | 120 requests / minute / IP |
+| Start conversation and send message | 30 requests / minute / IP |
 
 Limits return `429` with `Retry-After` where applicable.

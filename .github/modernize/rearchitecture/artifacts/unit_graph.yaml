@@ -5,14 +5,14 @@ units:
     source_anchors: [{path: backend/src/app.ts, line: 82}]
     exported_signature: [{method: "GET /api/health -> JSON health envelope", source_loc: "backend/src/app.ts:82", stability: must_preserve}]
     dynamic_entrypoints: []
-    depends_on: [{unit: mysql-pool, via: "queryOne SELECT 1"}]
+    depends_on: []
     shared_refs: [{module: mysql-pool-and-transaction, used_fields: [pool, query]}]
   - name: auth-api
     trigger: api
     trigger_detail: "POST/GET /api/auth/*"
     source_anchors: [{path: backend/src/modules/auth/auth.routes.ts, line: 32}]
     exported_signature: [{method: "auth routes -> API envelopes and session cookie", source_loc: "backend/src/modules/auth/auth.routes.ts:34", stability: frozen}]
-    dynamic_entrypoints: [{target: "auth controller handlers", mechanism: annotation-scan, source_loc: "backend/src/modules/auth/auth.routes.ts:18"}]
+    dynamic_entrypoints: []
     depends_on: []
     shared_refs:
       - {module: backend-auth-middleware, used_fields: [requireAuth, attachUser]}

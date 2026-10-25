@@ -484,11 +484,37 @@ export async function getSellerStats(sellerId: number) {
      WHERE m.sender_id <> ? AND (cp.last_read_at IS NULL OR m.created_at > cp.last_read_at)`,
     [sellerId, sellerId],
   );
+  const recentMessages = await query<RowDataPacket[]>(
+    `SELECT c.id AS conversation_id, m.body, m.created_at, u.full_name AS sender_name,
+            p.name AS product_name,
+            CASE WHEN cp.last_read_at IS NULL OR m.created_at > cp.last_read_at THEN 1 ELSE 0 END AS is_unread
+     FROM conversations c
+     JOIN conversation_participants cp ON cp.conversation_id = c.id AND cp.user_id = ?
+     JOIN messages m ON m.id = (
+       SELECT incoming.id FROM messages incoming
+       WHERE incoming.conversation_id = c.id AND incoming.sender_id <> ?
+       ORDER BY incoming.id DESC LIMIT 1
+     )
+     JOIN users u ON u.id = m.sender_id
+     LEFT JOIN products p ON p.id = c.product_id
+     WHERE c.status <> 'archived'
+     ORDER BY m.created_at DESC, m.id DESC
+     LIMIT 5`,
+    [sellerId, sellerId],
+  );
 
   return {
     counts,
     recentProducts: recent.map(mapProduct),
     unreadMessages: Number(unreadMessages?.count ?? 0),
+    recentMessages: recentMessages.map((row) => ({
+      conversationId: Number(row.conversation_id),
+      preview: String(row.body),
+      sentAt: String(row.created_at),
+      senderName: String(row.sender_name),
+      productName: row.product_name === null ? null : String(row.product_name),
+      isUnread: Boolean(row.is_unread),
+    })),
   };
 }
 

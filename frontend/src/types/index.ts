@@ -432,4 +432,12 @@ export interface SellerStats {
   };
   recentProducts: Product[];
   unreadMessages: number;
+  recentMessages: Array<{
+    conversationId: number;
+    preview: string;
+    sentAt: string;
+    senderName: string;
+    productName: string | null;
+    isUnread: boolean;
+  }>;
 }

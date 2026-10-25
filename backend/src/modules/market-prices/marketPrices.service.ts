@@ -5,6 +5,7 @@ import { ApiError } from "../../utils/errors";
 import { freshnessFor, STALE_AFTER_DAYS } from "../../utils/freshness";
 import { getPagination, paginationMeta } from "../../utils/pagination";
 import { baseUnitLabel, normalizePricePerBase, type UnitInfo } from "../../utils/units";
+import { buildPriceComparisonSummary } from "../../utils/priceComparison";
 import type { CompareQuery, ObservationInput, ObservationListQuery } from "./marketPrices.schemas";
 
 const OBSERVATION_SELECT = `
@@ -235,78 +236,13 @@ export async function comparePrices(filters: CompareQuery) {
     };
   });
 
-  interface Group {
-    productName: string;
-    dimension: string;
-    unitCode: string;
-    sampleCount: number;
-    verifiedFreshCount: number;
-    staleCount: number;
-    unverifiedCount: number;
-    minPrice: number | null;
-    maxPrice: number | null;
-    averagePrice: number | null;
-    normalizedMin: number | null;
-    normalizedMax: number | null;
-    normalizedUnit: string | null;
-    insufficientData: boolean;
-  }
-
-  const groups = new Map<string, Group>();
-  for (const observation of observations) {
-    const key = `${observation.productName.toLowerCase()}|${observation.unit.dimension}|${observation.unit.code}`;
-    const group: Group =
-      groups.get(key) ??
-      {
-        productName: observation.productName,
-        dimension: observation.unit.dimension,
-        unitCode: observation.unit.code,
-        sampleCount: 0,
-        verifiedFreshCount: 0,
-        staleCount: 0,
-        unverifiedCount: 0,
-        minPrice: null,
-        maxPrice: null,
-        averagePrice: null,
-        normalizedMin: null,
-        normalizedMax: null,
-        normalizedUnit: null,
-        insufficientData: true,
-      };
-    group.sampleCount += 1;
-    if (observation.isStale) group.staleCount += 1;
-    if (!observation.isVerified) group.unverifiedCount += 1;
-    const usable = observation.isVerified && !observation.isStale;
-    if (usable) {
-      group.verifiedFreshCount += 1;
-      group.minPrice = group.minPrice === null ? observation.price : Math.min(group.minPrice, observation.price);
-      group.maxPrice = group.maxPrice === null ? observation.price : Math.max(group.maxPrice, observation.price);
-      if (observation.normalizedPrice) {
-        group.normalizedMin =
-          group.normalizedMin === null
-            ? observation.normalizedPrice.value
-            : Math.min(group.normalizedMin, observation.normalizedPrice.value);
-        group.normalizedMax =
-          group.normalizedMax === null
-            ? observation.normalizedPrice.value
-            : Math.max(group.normalizedMax, observation.normalizedPrice.value);
-        group.normalizedUnit = observation.normalizedPrice.per;
-      }
-    }
-    groups.set(key, group);
-  }
-  for (const group of groups.values()) {
-    if (group.verifiedFreshCount > 0 && group.minPrice !== null && group.maxPrice !== null) {
-      group.averagePrice = Number(((group.minPrice + group.maxPrice) / 2).toFixed(2));
-    }
-    group.insufficientData = group.verifiedFreshCount === 0;
-  }
+  const summary = buildPriceComparisonSummary(observations);
 
   return {
     query: { q: filters.q, categoryId: filters.categoryId ?? null, locationId: filters.locationId ?? null },
     observations,
     advertised,
-    summary: Array.from(groups.values()),
+    summary,
     meta: {
       staleThresholdDays: STALE_AFTER_DAYS,
       observationCount: observations.length,

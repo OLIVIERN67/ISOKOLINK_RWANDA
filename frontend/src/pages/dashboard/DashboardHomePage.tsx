@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   Bell,
@@ -11,8 +11,8 @@ import {
   TrendingUp,
   UserCheck,
 } from "lucide-react";
-import { authApi, getApiError, priceApi, productApi, referenceApi, userApi } from "../../services/api";
-import type { Announcement, BuyerStats, MarketObservation, Product } from "../../types";
+import { authApi, getApiError, messagingApi, notificationApi, priceApi, productApi, referenceApi, userApi } from "../../services/api";
+import type { Announcement, BuyerStats, ConversationSummary, MarketObservation, NotificationItem, Product } from "../../types";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { useDocumentTitle } from "../../components/ScrollToTop";
@@ -28,10 +28,13 @@ export function DashboardHomePage() {
   useDocumentTitle("Dashboard");
   const { user, hasRole } = useAuth();
   const { success, error } = useToast();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<BuyerStats | null>(null);
   const [featured, setFeatured] = useState<Product[]>([]);
   const [observations, setObservations] = useState<MarketObservation[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [recentConversations, setRecentConversations] = useState<ConversationSummary[]>([]);
+  const [recentNotifications, setRecentNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [resending, setResending] = useState(false);
   const [devVerification, setDevVerification] = useState<string | null>(null);
@@ -43,13 +46,17 @@ export function DashboardHomePage() {
       productApi.list({ sort: "featured", pageSize: 4 }),
       priceApi.list({ pageSize: 4, sort: "newest" }),
       referenceApi.announcements(),
+      messagingApi.conversations({ page: 1, pageSize: 4 }),
+      notificationApi.list({ page: 1, pageSize: 4 }),
     ])
-      .then(([statsResult, productResult, priceResult, announcementResult]) => {
+      .then(([statsResult, productResult, priceResult, announcementResult, conversationResult, notificationResult]) => {
         if (!active) return;
         setStats(statsResult);
         setFeatured(productResult.items);
         setObservations(priceResult.items);
         setAnnouncements(announcementResult.slice(0, 3));
+        setRecentConversations(conversationResult.items);
+        setRecentNotifications(notificationResult.items);
       })
       .catch(() => undefined)
       .finally(() => {
@@ -71,6 +78,19 @@ export function DashboardHomePage() {
     } finally {
       setResending(false);
     }
+  }
+
+  async function openRecentNotification(notification: NotificationItem) {
+    if (!notification.isRead) {
+      try {
+        await notificationApi.markRead(notification.id);
+        window.dispatchEvent(new Event("isokolink:unread"));
+      } catch (requestError) {
+        error(getApiError(requestError).message);
+        return;
+      }
+    }
+    navigate(notification.link?.startsWith("/") ? notification.link : "/dashboard/notifications");
   }
 
   const hour = new Date().getHours();
@@ -146,6 +166,76 @@ export function DashboardHomePage() {
           tone={isSeller ? "green" : "gray"}
         />
       </div>
+
+      <section className="mt-8 grid gap-4 lg:grid-cols-2" aria-label="Recent activity">
+        <div className="card p-5">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="font-display text-base font-bold">Recent messages</h2>
+              <p className="text-xs text-charcoal/50">Your latest conversations with sellers.</p>
+            </div>
+            <Link to="/dashboard/conversations" className="text-xs font-semibold text-forest-700 hover:underline">Open inbox</Link>
+          </div>
+          {recentConversations.length === 0 ? (
+            <p className="py-4 text-sm text-charcoal/50">No conversations yet.</p>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {recentConversations.map((conversation) => (
+                <Link
+                  key={conversation.id}
+                  to={`/dashboard/conversations/${conversation.id}`}
+                  className="flex items-start gap-3 py-3 transition hover:bg-cream/50"
+                >
+                  <MessageSquare className="mt-1 h-4 w-4 shrink-0 text-forest-600" aria-hidden="true" />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                      <span className="text-sm font-semibold text-charcoal">{conversation.otherUser.businessName || conversation.otherUser.name}</span>
+                      <span className="text-[11px] text-charcoal/45">{formatRelative(conversation.lastMessageAt ?? conversation.createdAt)}</span>
+                    </span>
+                    {conversation.productName ? <span className="mt-0.5 block text-[11px] text-forest-700">About {conversation.productName}</span> : null}
+                    <span className="mt-1 block truncate text-xs text-charcoal/60">{conversation.lastMessage ?? conversation.subject ?? "Conversation started"}</span>
+                  </span>
+                  {conversation.unreadCount > 0 ? <Badge tone="gold">{conversation.unreadCount} new</Badge> : null}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="card p-5">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="font-display text-base font-bold">Recent notifications</h2>
+              <p className="text-xs text-charcoal/50">Updates about messages, reports, and your account.</p>
+            </div>
+            <Link to="/dashboard/notifications" className="text-xs font-semibold text-forest-700 hover:underline">View all</Link>
+          </div>
+          {recentNotifications.length === 0 ? (
+            <p className="py-4 text-sm text-charcoal/50">You’re all caught up.</p>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {recentNotifications.map((notification) => (
+                <button
+                  key={notification.id}
+                  type="button"
+                  onClick={() => void openRecentNotification(notification)}
+                  className="flex w-full items-start gap-3 py-3 text-left transition hover:bg-cream/50"
+                >
+                  <Bell className={`mt-1 h-4 w-4 shrink-0 ${notification.isRead ? "text-gray-400" : "text-harvest-dark"}`} aria-hidden="true" />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                      <span className="text-sm font-semibold text-charcoal">{notification.title}</span>
+                      <span className="text-[11px] text-charcoal/45">{formatRelative(notification.createdAt)}</span>
+                    </span>
+                    {notification.body ? <span className="mt-1 block truncate text-xs text-charcoal/60">{notification.body}</span> : null}
+                  </span>
+                  {!notification.isRead ? <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-harvest" aria-label="Unread" /> : null}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
 
       {!isSeller ? (
         <div className="mt-5 grid gap-4 sm:grid-cols-2">

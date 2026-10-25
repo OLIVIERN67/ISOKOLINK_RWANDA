@@ -12,7 +12,7 @@ export const imageUpload = multer({
   limits: { fileSize: env.maxUploadBytes, files: 5 },
   fileFilter: (_req, file, callback) => {
     if (!ALLOWED.has(file.mimetype)) {
-      callback(new Error("Only JPEG, PNG and WebP images are allowed."));
+      callback(ApiError.badRequest("Only JPEG, PNG and WebP images are allowed."));
       return;
     }
     callback(null, true);

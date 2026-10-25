@@ -47,7 +47,7 @@ conversationsRouter.post(
     const senderName = req.user!.sellerBusinessName || req.user!.fullName;
     const conversation = await startConversation(
       req.user!.id,
-      req.user!.roles.includes("admin"),
+      req.user!.roles,
       req.body,
       senderName,
     );

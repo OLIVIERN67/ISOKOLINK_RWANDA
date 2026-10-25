@@ -18,7 +18,7 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { Alert } from "../../components/ui/Alert";
 import { LoadingBlock, ErrorState } from "../../components/ui/States";
-import { formatCurrency, formatDate, approvalTone, APPROVAL_LABELS } from "../../utils/format";
+import { formatCurrency, formatDate, formatRelative, approvalTone, APPROVAL_LABELS } from "../../utils/format";
 
 export function SellerDashboardPage() {
   const [stats, setStats] = useState<SellerStats | null>(null);
@@ -157,6 +157,39 @@ export function SellerDashboardPage() {
                     <p className="mt-1 max-w-[180px] truncate text-[10px] text-error">{product.rejectionReason}</p>
                   ) : null}
                 </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="mt-8 card p-5">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="font-display text-lg font-bold">Recent buyer messages</h2>
+            <p className="text-xs text-charcoal/50">The latest messages from people interested in your listings.</p>
+          </div>
+          <Link to="/seller/conversations" className="text-xs font-semibold text-forest-700 hover:underline">Open inbox</Link>
+        </div>
+        {!stats || stats.recentMessages.length === 0 ? (
+          <p className="py-4 text-sm text-charcoal/50">No buyer messages yet.</p>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {stats.recentMessages.map((message) => (
+              <Link
+                key={message.conversationId}
+                to={`/seller/conversations/${message.conversationId}`}
+                className="flex items-start gap-3 py-3 transition hover:bg-cream/50"
+              >
+                <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${message.isUnread ? "bg-harvest" : "bg-transparent"}`} aria-hidden="true" />
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                    <span className="text-sm font-semibold text-charcoal">{message.senderName}</span>
+                    <span className="text-[11px] text-charcoal/45">{formatRelative(message.sentAt)}</span>
+                  </span>
+                  {message.productName ? <span className="mt-0.5 block text-[11px] text-forest-700">About {message.productName}</span> : null}
+                  <span className="mt-1 block truncate text-xs text-charcoal/60">{message.preview}</span>
+                </span>
               </Link>
             ))}
           </div>

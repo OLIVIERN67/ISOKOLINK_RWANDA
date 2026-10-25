@@ -7,6 +7,7 @@ import { sha256, safeEqual, randomToken } from "../src/utils/crypto";
 import { passwordSchema, emailSchema, registerSchema } from "../src/modules/auth/auth.schemas";
 import { productCreateSchema } from "../src/modules/products/products.schemas";
 import { reportUpdateSchema } from "../src/modules/reports/reports.schemas";
+import { buildPriceComparisonSummary } from "../src/utils/priceComparison";
 
 function isoDaysAgo(days: number): string {
   const date = new Date();
@@ -37,12 +38,12 @@ describe("freshness", () => {
 
 describe("unit normalization", () => {
   const kg: UnitInfo = { id: 1, code: "kg", label: "Kilogram", dimension: "weight", factor_to_base: 1 };
-  const g: UnitInfo = { id: 2, code: "g", label: "Gram", dimension: "weight", factor_to_base: 1000 };
+  const g: UnitInfo = { id: 2, code: "g", label: "Gram", dimension: "weight", factor_to_base: 0.001 };
   const bag: UnitInfo = { id: 3, code: "bag", label: "Bag", dimension: "bag", factor_to_base: 50 };
   const piece: UnitInfo = { id: 4, code: "pc", label: "Piece", dimension: "count", factor_to_base: 1 };
 
   it("normalizes mass units to kilograms", () => {
-    expect(normalizePricePerBase(2000, g)).toBe(2);
+    expect(normalizePricePerBase(2, g)).toBe(2000);
     expect(normalizePricePerBase(500, kg)).toBe(500);
   });
 
@@ -64,6 +65,32 @@ describe("unit normalization", () => {
     expect(baseUnitLabel("volume")).toBe("litre");
     expect(baseUnitLabel("count")).toBe("piece");
     expect(baseUnitLabel("unknown")).toBe("unit");
+  });
+});
+
+describe("price comparison summaries", () => {
+  it("calculates the mean from verified fresh observations, not the range midpoint", () => {
+    const summary = buildPriceComparisonSummary([
+      { productName: "Tomatoes", price: 10, unit: { code: "kg", dimension: "weight" }, isStale: false, isVerified: true, normalizedPrice: { value: 10, per: "kg" } },
+      { productName: "Tomatoes", price: 20, unit: { code: "kg", dimension: "weight" }, isStale: false, isVerified: true, normalizedPrice: { value: 20, per: "kg" } },
+      { productName: "Tomatoes", price: 90, unit: { code: "kg", dimension: "weight" }, isStale: false, isVerified: true, normalizedPrice: { value: 90, per: "kg" } },
+      { productName: "Tomatoes", price: 1000, unit: { code: "kg", dimension: "weight" }, isStale: true, isVerified: true, normalizedPrice: { value: 1000, per: "kg" } },
+      { productName: "Tomatoes", price: 1, unit: { code: "kg", dimension: "weight" }, isStale: false, isVerified: false, normalizedPrice: { value: 1, per: "kg" } },
+    ]);
+
+    expect(summary).toHaveLength(1);
+    expect(summary[0]).toMatchObject({
+      sampleCount: 5,
+      verifiedFreshCount: 3,
+      staleCount: 1,
+      unverifiedCount: 1,
+      minPrice: 10,
+      maxPrice: 90,
+      averagePrice: 40,
+      normalizedMin: 10,
+      normalizedMax: 90,
+      insufficientData: false,
+    });
   });
 });
 

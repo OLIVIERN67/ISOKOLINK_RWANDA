@@ -48,6 +48,8 @@ ISOKOLINK_RWANDA/
 There is no SQLite/PostgreSQL fallback: **MySQL is required** for migrations,
 seeding and integration testing.
 
+The application database is named **`isokolink_rwanda`** by default.
+
 ## Local setup
 
 ### 1. Backend
@@ -56,14 +58,21 @@ seeding and integration testing.
 cd backend
 npm install
 Copy-Item .env.example .env
-# Edit .env with your MySQL credentials and a strong SESSION_SECRET
+# Set these values in backend/.env:
+# DB_HOST=localhost
+# DB_PORT=3306
+# DB_NAME=isokolink_rwanda
+# DB_USER=your_mysql_user
+# DB_PASSWORD=your_mysql_password
+# Also set a strong SESSION_SECRET.
 npm run db:setup      # creates the database, runs migrations, seeds demo data
 npm run dev           # http://localhost:5000
 ```
 
 `npm run db:migrate` only applies migrations; `npm run db:seed` only seeds.
 The migration runner creates `DB_NAME` automatically if the configured user has
-permission.
+permission. Make sure the MySQL server is running before executing
+`npm run db:setup`.
 
 ### 2. Frontend
 
@@ -190,7 +199,7 @@ parameters and role requirements.
 - Verification and reset tokens are single-use, expiring, and stored hashed.
 - Login, registration and password-reset endpoints are rate limited.
 - Requests with an untrusted `Origin` are rejected server-side.
-- Uploads accept only JPEG/PNG/WebP/GIF up to 5 MB and are served from
+- Uploads accept only JPEG/PNG/WebP up to 5 MB and are served from
   `/uploads` with cache headers.
 - Admin actions write audit-log entries with actor, IP and metadata.
 - `EXPOSE_DEV_TOKENS` is forced off in production.
@@ -203,8 +212,9 @@ npm test
 ```
 
 The current suite covers freshness thresholds, unit normalization and safe
-comparisons, pagination, slug/crypto helpers, and Zod validation for auth,
-products and report moderation. Tests do not need MySQL.
+comparisons, price-comparison summaries, pagination, slug/crypto helpers, API
+validation envelopes, origin rejection, protected-route access, and Zod
+validation for auth, products and report moderation. Tests do not need MySQL.
 
 Integration tests against the database are intentionally not included in the
 default run because they require a live MySQL instance. When MySQL is available,
@@ -217,8 +227,6 @@ run `npm run db:setup` first and add database-backed tests under `backend/tests`
   in development only.
 - Frontend translations cover navigation, common actions and footer strings; most
   page content remains English.
-- The production bundle is currently a single chunk; route-level code splitting is
-  a future optimization.
 - Uploaded files are stored on local disk. Production deployments should use a
   persistent volume or object storage.
 

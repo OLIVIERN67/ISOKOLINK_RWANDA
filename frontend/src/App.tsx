@@ -1,59 +1,67 @@
+import { lazy, Suspense, type ComponentType } from "react";
 import { Route, Routes } from "react-router-dom";
 import { PublicLayout } from "./components/PublicLayout";
 import { DashboardLayout } from "./components/DashboardLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { ConversationsView } from "./components/ConversationsView";
-import { NotificationsView } from "./components/NotificationsView";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { AuthLayout } from "./pages/auth/AuthLayout";
-import { LoginPage } from "./pages/auth/LoginPage";
-import { RegisterPage } from "./pages/auth/RegisterPage";
-import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage";
-import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage";
-import { VerifyEmailPage } from "./pages/auth/VerifyEmailPage";
-import { HomePage } from "./pages/HomePage";
-import { ProductsPage } from "./pages/ProductsPage";
-import { ProductDetailPage } from "./pages/ProductDetailPage";
-import { PricesPage } from "./pages/PricesPage";
-import { SellerStorefrontPage } from "./pages/SellerStorefrontPage";
-import { AboutPage } from "./pages/AboutPage";
-import { ContactPage } from "./pages/ContactPage";
-import { FaqPage } from "./pages/FaqPage";
-import { PrivacyPage } from "./pages/PrivacyPage";
-import { TermsPage } from "./pages/TermsPage";
-import { NotAuthorizedPage } from "./pages/NotAuthorizedPage";
-import { NotFoundPage } from "./pages/NotFoundPage";
-import { DashboardHomePage } from "./pages/dashboard/DashboardHomePage";
-import { BrowseProductsPage } from "./pages/dashboard/BrowseProductsPage";
-import { SavedProductsPage } from "./pages/dashboard/SavedProductsPage";
-import { BuyerReportsPage } from "./pages/dashboard/BuyerReportsPage";
-import { ProfilePage } from "./pages/dashboard/ProfilePage";
-import { SecurityPage } from "./pages/dashboard/SecurityPage";
-import { BecomeSellerPage } from "./pages/dashboard/BecomeSellerPage";
-import { SwitchWorkspacePage } from "./pages/dashboard/SwitchWorkspacePage";
-import { SellerDashboardPage } from "./pages/seller/SellerDashboardPage";
-import { SellerProductsPage } from "./pages/seller/SellerProductsPage";
-import { SellerProductFormPage } from "./pages/seller/SellerProductFormPage";
-import { SellerProfilePage } from "./pages/seller/SellerProfilePage";
-import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
-import { AdminProductsPage } from "./pages/admin/AdminProductsPage";
-import { AdminProductDetailPage } from "./pages/admin/AdminProductDetailPage";
-import { AdminReportsPage } from "./pages/admin/AdminReportsPage";
-import { AdminPricesPage } from "./pages/admin/AdminPricesPage";
-import { AdminCategoriesPage } from "./pages/admin/AdminCategoriesPage";
-import { AdminMarketsPage } from "./pages/admin/AdminMarketsPage";
-import { AdminLocationsPage } from "./pages/admin/AdminLocationsPage";
-import { AdminUnitsPage } from "./pages/admin/AdminUnitsPage";
-import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
-import { AdminUserDetailPage } from "./pages/admin/AdminUserDetailPage";
-import { AdminAnnouncementsPage } from "./pages/admin/AdminAnnouncementsPage";
-import { AdminAuditLogsPage } from "./pages/admin/AdminAuditLogsPage";
+import { LoadingPage } from "./components/ui/States";
+
+function lazyNamed<T extends Record<K, ComponentType<any>>, K extends keyof T>(loader: () => Promise<T>, key: K) {
+  return lazy(async () => ({ default: (await loader())[key] }));
+}
+
+const ConversationsView = lazyNamed(() => import("./components/ConversationsView"), "ConversationsView");
+const NotificationsView = lazyNamed(() => import("./components/NotificationsView"), "NotificationsView");
+const LoginPage = lazyNamed(() => import("./pages/auth/LoginPage"), "LoginPage");
+const RegisterPage = lazyNamed(() => import("./pages/auth/RegisterPage"), "RegisterPage");
+const ForgotPasswordPage = lazyNamed(() => import("./pages/auth/ForgotPasswordPage"), "ForgotPasswordPage");
+const ResetPasswordPage = lazyNamed(() => import("./pages/auth/ResetPasswordPage"), "ResetPasswordPage");
+const VerifyEmailPage = lazyNamed(() => import("./pages/auth/VerifyEmailPage"), "VerifyEmailPage");
+const HomePage = lazyNamed(() => import("./pages/HomePage"), "HomePage");
+const ProductsPage = lazyNamed(() => import("./pages/ProductsPage"), "ProductsPage");
+const ProductDetailPage = lazyNamed(() => import("./pages/ProductDetailPage"), "ProductDetailPage");
+const PricesPage = lazyNamed(() => import("./pages/PricesPage"), "PricesPage");
+const SellerStorefrontPage = lazyNamed(() => import("./pages/SellerStorefrontPage"), "SellerStorefrontPage");
+const AboutPage = lazyNamed(() => import("./pages/AboutPage"), "AboutPage");
+const ContactPage = lazyNamed(() => import("./pages/ContactPage"), "ContactPage");
+const FaqPage = lazyNamed(() => import("./pages/FaqPage"), "FaqPage");
+const PrivacyPage = lazyNamed(() => import("./pages/PrivacyPage"), "PrivacyPage");
+const TermsPage = lazyNamed(() => import("./pages/TermsPage"), "TermsPage");
+const NotAuthorizedPage = lazyNamed(() => import("./pages/NotAuthorizedPage"), "NotAuthorizedPage");
+const NotFoundPage = lazyNamed(() => import("./pages/NotFoundPage"), "NotFoundPage");
+const DashboardHomePage = lazyNamed(() => import("./pages/dashboard/DashboardHomePage"), "DashboardHomePage");
+const BrowseProductsPage = lazyNamed(() => import("./pages/dashboard/BrowseProductsPage"), "BrowseProductsPage");
+const SavedProductsPage = lazyNamed(() => import("./pages/dashboard/SavedProductsPage"), "SavedProductsPage");
+const BuyerReportsPage = lazyNamed(() => import("./pages/dashboard/BuyerReportsPage"), "BuyerReportsPage");
+const ProfilePage = lazyNamed(() => import("./pages/dashboard/ProfilePage"), "ProfilePage");
+const SecurityPage = lazyNamed(() => import("./pages/dashboard/SecurityPage"), "SecurityPage");
+const BecomeSellerPage = lazyNamed(() => import("./pages/dashboard/BecomeSellerPage"), "BecomeSellerPage");
+const SwitchWorkspacePage = lazyNamed(() => import("./pages/dashboard/SwitchWorkspacePage"), "SwitchWorkspacePage");
+const SellerDashboardPage = lazyNamed(() => import("./pages/seller/SellerDashboardPage"), "SellerDashboardPage");
+const SellerProductsPage = lazyNamed(() => import("./pages/seller/SellerProductsPage"), "SellerProductsPage");
+const SellerProductFormPage = lazyNamed(() => import("./pages/seller/SellerProductFormPage"), "SellerProductFormPage");
+const SellerProfilePage = lazyNamed(() => import("./pages/seller/SellerProfilePage"), "SellerProfilePage");
+const AdminDashboardPage = lazyNamed(() => import("./pages/admin/AdminDashboardPage"), "AdminDashboardPage");
+const AdminProductsPage = lazyNamed(() => import("./pages/admin/AdminProductsPage"), "AdminProductsPage");
+const AdminProductDetailPage = lazyNamed(() => import("./pages/admin/AdminProductDetailPage"), "AdminProductDetailPage");
+const AdminReportsPage = lazyNamed(() => import("./pages/admin/AdminReportsPage"), "AdminReportsPage");
+const AdminPricesPage = lazyNamed(() => import("./pages/admin/AdminPricesPage"), "AdminPricesPage");
+const AdminCategoriesPage = lazyNamed(() => import("./pages/admin/AdminCategoriesPage"), "AdminCategoriesPage");
+const AdminMarketsPage = lazyNamed(() => import("./pages/admin/AdminMarketsPage"), "AdminMarketsPage");
+const AdminLocationsPage = lazyNamed(() => import("./pages/admin/AdminLocationsPage"), "AdminLocationsPage");
+const AdminUnitsPage = lazyNamed(() => import("./pages/admin/AdminUnitsPage"), "AdminUnitsPage");
+const AdminUsersPage = lazyNamed(() => import("./pages/admin/AdminUsersPage"), "AdminUsersPage");
+const AdminUserDetailPage = lazyNamed(() => import("./pages/admin/AdminUserDetailPage"), "AdminUserDetailPage");
+const AdminAnnouncementsPage = lazyNamed(() => import("./pages/admin/AdminAnnouncementsPage"), "AdminAnnouncementsPage");
+const AdminAuditLogsPage = lazyNamed(() => import("./pages/admin/AdminAuditLogsPage"), "AdminAuditLogsPage");
 
 export function App() {
   return (
     <>
       <ScrollToTop />
-      <Routes>
+      <Suspense fallback={<LoadingPage label="Loading page…" />}>
+        <Routes>
         <Route element={<PublicLayout />}>
           <Route index element={<HomePage />} />
           <Route path="products" element={<ProductsPage />} />
@@ -131,7 +139,8 @@ export function App() {
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+        </Routes>
+      </Suspense>
     </>
   );
 }

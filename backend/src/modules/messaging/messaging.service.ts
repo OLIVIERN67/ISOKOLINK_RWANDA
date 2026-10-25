@@ -8,6 +8,22 @@ import type { z } from "zod";
 
 type ConversationQuery = z.infer<typeof conversationListQuerySchema>;
 
+export function canStartDirectConversation(senderRoles: string[], recipientRoles: string[]): boolean {
+  if (senderRoles.includes("admin")) return true;
+  if (recipientRoles.includes("admin")) {
+    return senderRoles.includes("buyer") || senderRoles.includes("seller");
+  }
+  return (
+    (senderRoles.includes("buyer") && recipientRoles.includes("seller")) ||
+    (senderRoles.includes("seller") && recipientRoles.includes("buyer"))
+  );
+}
+
+function conversationPath(roles: string[], conversationId: number): string {
+  const basePath = roles.includes("admin") ? "/admin" : roles.includes("seller") ? "/seller" : "/dashboard";
+  return `${basePath}/conversations/${conversationId}`;
+}
+
 async function isParticipant(conversationId: number, userId: number): Promise<boolean> {
   const row = await queryOne<RowDataPacket>(
     "SELECT 1 AS ok FROM conversation_participants WHERE conversation_id = ? AND user_id = ?",
@@ -24,7 +40,7 @@ async function assertParticipant(conversationId: number, userId: number): Promis
 
 export async function startConversation(
   userId: number,
-  isAdmin: boolean,
+  senderRoles: string[],
   input: { recipientId: number; productId?: number | null; subject?: string; message: string },
   senderName: string,
 ) {
@@ -43,25 +59,30 @@ export async function startConversation(
   );
   if (!recipient) throw ApiError.notFound("Recipient not found.");
   const recipientRoles = recipient.roles ? String(recipient.roles).split(",") : [];
+  const isAdmin = senderRoles.includes("admin");
+
+  if (!canStartDirectConversation(senderRoles, recipientRoles)) {
+    throw ApiError.badRequest("Conversations are available between buyers, sellers, and administrators.");
+  }
 
   let product: { id: number; name: string; seller_id: number } | null = null;
   if (input.productId) {
     const row = await queryOne<RowDataPacket>(
-      "SELECT id, name, seller_id FROM products WHERE id = ? AND is_archived = 0",
+      `SELECT p.id, p.name, p.seller_id, p.approval_status, p.availability
+       FROM products p JOIN users u ON u.id = p.seller_id
+       WHERE p.id = ? AND p.is_archived = 0 AND u.status = 'active'`,
       [input.productId],
     );
     if (!row) throw ApiError.notFound("Product not found.");
     product = { id: Number(row.id), name: String(row.name), seller_id: Number(row.seller_id) };
-    if (!isAdmin && product.seller_id !== input.recipientId) {
-      throw ApiError.badRequest("The selected product does not belong to this seller.");
+    if (!isAdmin) {
+      const senderIsSeller = senderRoles.includes("seller") && product.seller_id === userId;
+      const recipientIsSeller = recipientRoles.includes("seller") && product.seller_id === input.recipientId;
+      const publicListing = row.approval_status === "approved" && row.availability === "available";
+      if ((!senderIsSeller && !recipientIsSeller) || !publicListing) {
+        throw ApiError.badRequest("Product conversations require an approved, available listing and its seller.");
+      }
     }
-  }
-
-  if (!isAdmin && !recipientRoles.includes("seller")) {
-    throw ApiError.badRequest("You can only contact registered sellers.");
-  }
-  if (!isAdmin && !recipientRoles.includes("admin") && !recipientRoles.includes("seller")) {
-    throw ApiError.badRequest("You can only contact registered sellers.");
   }
 
   const existing = await queryOne<RowDataPacket>(
@@ -104,23 +125,13 @@ export async function startConversation(
     return id;
   });
 
-  if (!existing) {
-    await createNotification({
-      userId: input.recipientId,
-      type: "message",
-      title: `New message from ${senderName}`,
-      body: input.message.slice(0, 140),
-      link: `/dashboard/conversations/${conversationId}`,
-    });
-  } else {
-    await createNotification({
-      userId: input.recipientId,
-      type: "message",
-      title: `New message from ${senderName}`,
-      body: input.message.slice(0, 140),
-      link: `/dashboard/conversations/${conversationId}`,
-    });
-  }
+  await createNotification({
+    userId: input.recipientId,
+    type: "message",
+    title: `New message from ${senderName}`,
+    body: input.message.slice(0, 140),
+    link: conversationPath(recipientRoles, conversationId),
+  });
 
   return getConversation(userId, conversationId);
 }
@@ -296,7 +307,12 @@ export async function sendMessage(userId: number, conversationId: number, body: 
   );
 
   const recipients = await query<RowDataPacket[]>(
-    "SELECT user_id FROM conversation_participants WHERE conversation_id = ? AND user_id <> ?",
+    `SELECT cp.user_id, GROUP_CONCAT(DISTINCT r.name) AS roles
+     FROM conversation_participants cp
+     LEFT JOIN user_roles ur ON ur.user_id = cp.user_id
+     LEFT JOIN roles r ON r.id = ur.role_id
+     WHERE cp.conversation_id = ? AND cp.user_id <> ?
+     GROUP BY cp.user_id`,
     [conversationId, userId],
   );
   await Promise.all(
@@ -306,7 +322,7 @@ export async function sendMessage(userId: number, conversationId: number, body: 
         type: "message",
         title: `New message from ${senderName}`,
         body: body.slice(0, 140),
-        link: `/dashboard/conversations/${conversationId}`,
+        link: conversationPath(recipient.roles ? String(recipient.roles).split(",") : [], conversationId),
       }),
     ),
   );
