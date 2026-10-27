@@ -7,7 +7,7 @@ export function BrowseProductsPage() {
       <PageHeader
         eyebrow="Buyer workspace"
         title="Browse products"
-        subtitle="Search fresh food from verified sellers across Rwanda."
+        subtitle="Search fresh food from registered sellers across Rwanda."
       />
       <ProductBrowser />
     </div>

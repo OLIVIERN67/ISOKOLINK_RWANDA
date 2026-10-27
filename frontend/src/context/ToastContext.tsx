@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { CheckCircle2, Info, TriangleAlert, X, XCircle } from "lucide-react";
 import { cn } from "../utils/cn";
+import { useI18n } from "./I18nContext";
 
 type ToastType = "success" | "error" | "info" | "warning";
 
@@ -80,6 +81,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 
 function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => void }) {
+  const { t } = useI18n();
   useEffect(() => {
     const timer = window.setTimeout(onDismiss, toast.type === "error" ? 7000 : 4500);
     return () => window.clearTimeout(timer);
@@ -102,7 +104,7 @@ function ToastCard({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => vo
         type="button"
         onClick={onDismiss}
         className="rounded-md p-1 text-gray-400 transition hover:bg-gray-100 hover:text-charcoal"
-        aria-label="Dismiss notification"
+        aria-label={t("common.dismiss")}
       >
         <X className="h-4 w-4" aria-hidden />
       </button>

@@ -247,7 +247,7 @@ export async function getPublicSeller(userId: number) {
      LEFT JOIN locations l ON l.id = sp.location_id
      LEFT JOIN locations p ON p.id = l.parent_id
      LEFT JOIN markets m ON m.id = sp.market_id
-     WHERE u.id = ? AND u.status = 'active'`,
+     WHERE u.id = ? AND u.status = 'active' AND sp.status = 'active'`,
     [userId],
   );
   if (!row || !row.profile_id) throw ApiError.notFound("Seller not found.");

@@ -29,6 +29,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useI18n } from "../context/I18nContext";
 import { useToast } from "../context/ToastContext";
 import { useUnreadCounts } from "../hooks/useUnreadCounts";
 import { cn } from "../utils/cn";
@@ -50,19 +51,20 @@ interface NavGroup {
   items: NavItem[];
 }
 
-const variantLabels: Record<Variant, { title: string; subtitle: string }> = {
-  buyer: { title: "Buyer workspace", subtitle: "Discover food, compare prices, and connect with sellers." },
-  seller: { title: "Seller workspace", subtitle: "Manage your listings and talk to interested buyers." },
-  admin: { title: "Administration", subtitle: "Moderate listings, users, and marketplace data." },
-};
-
 export function DashboardLayout({ variant }: { variant: Variant }) {
   const { user, hasRole, logout } = useAuth();
+  const { t } = useI18n();
   const { error } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const { notifications, messages } = useUnreadCounts();
   const [open, setOpen] = useState(false);
+
+  const variantLabels: Record<Variant, { title: string; subtitle: string }> = {
+    buyer: { title: t("dashboard.buyer.title"), subtitle: t("dashboard.buyer.subtitle") },
+    seller: { title: t("dashboard.seller.title"), subtitle: t("dashboard.seller.subtitle") },
+    admin: { title: t("dashboard.admin.title"), subtitle: t("dashboard.admin.subtitle") },
+  };
 
   useEffect(() => {
     setOpen(false);
@@ -70,7 +72,7 @@ export function DashboardLayout({ variant }: { variant: Variant }) {
 
   if (!user) return null;
 
-  const groups = buildGroups(variant, hasRole("seller"));
+  const groups = buildGroups(variant, hasRole("seller"), t);
   const allItems = groups.flatMap((group) => group.items);
   const activeItem =
     allItems
@@ -82,7 +84,7 @@ export function DashboardLayout({ variant }: { variant: Variant }) {
       await logout();
       navigate("/");
     } catch {
-      error("Could not sign out. Please try again.");
+      error(t("errors.signOutFailed"));
     }
   }
 
@@ -93,7 +95,7 @@ export function DashboardLayout({ variant }: { variant: Variant }) {
           <button
             type="button"
             className="fixed inset-0 z-30 bg-charcoal/40 lg:hidden"
-            aria-label="Close menu"
+            aria-label={t("nav.closeMenu")}
             onClick={() => setOpen(false)}
           />
         ) : null}
@@ -109,8 +111,8 @@ export function DashboardLayout({ variant }: { variant: Variant }) {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 lg:hidden"
-              aria-label="Close sidebar"
+              className="min-h-11 min-w-11 rounded-lg p-2 text-gray-500 hover:bg-gray-100 lg:hidden"
+              aria-label={t("nav.closeSidebar")}
             >
               <X className="h-5 w-5" aria-hidden />
             </button>
@@ -121,7 +123,7 @@ export function DashboardLayout({ variant }: { variant: Variant }) {
             <p className="mt-1 text-xs leading-5 text-charcoal/50">{variantLabels[variant].subtitle}</p>
           </div>
 
-          <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4" aria-label="Dashboard navigation">
+          <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4" aria-label={t("dashboard.nav.overview")}>
             {groups.map((group) => (
               <div key={group.title}>
                 <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">{group.title}</p>
@@ -162,8 +164,8 @@ export function DashboardLayout({ variant }: { variant: Variant }) {
                 type="button"
                 onClick={handleLogout}
                 className="rounded-lg p-1.5 text-gray-400 transition hover:bg-white hover:text-error"
-                aria-label="Sign out"
-                title="Sign out"
+                aria-label={t("common.logout")}
+                title={t("common.logout")}
               >
                 <LogOut className="h-4 w-4" aria-hidden />
               </button>
@@ -177,16 +179,16 @@ export function DashboardLayout({ variant }: { variant: Variant }) {
               <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="rounded-lg p-2 text-charcoal hover:bg-white lg:hidden"
-                aria-label="Open sidebar"
+                className="min-h-11 min-w-11 rounded-lg p-2 text-charcoal hover:bg-white lg:hidden"
+                aria-label={t("nav.openSidebar")}
               >
                 <Menu className="h-5 w-5" aria-hidden />
               </button>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-charcoal">{activeItem?.label ?? "Dashboard"}</p>
+                <p className="truncate text-sm font-semibold text-charcoal">{activeItem?.label ?? t("common.dashboard")}</p>
                 <p className="hidden truncate text-[11px] text-charcoal/50 sm:block">
-                  Signed in as {user.fullName}
-                  {user.isEmailVerified ? "" : " · email not verified"}
+                  {t("common.signedInAs", { name: user.fullName })}
+                  {user.isEmailVerified ? "" : ` — ${t("common.emailNotVerified")}`}
                 </p>
               </div>
             </div>
@@ -196,12 +198,12 @@ export function DashboardLayout({ variant }: { variant: Variant }) {
                 to="/products"
                 className="hidden rounded-lg px-3 py-2 text-xs font-semibold text-charcoal/70 transition hover:bg-white hover:text-forest-700 sm:inline-flex"
               >
-                Marketplace
+                {t("nav.marketplace")}
               </Link>
               <Link
                 to={variant === "admin" ? "/admin/conversations" : variant === "seller" ? "/seller/conversations" : "/dashboard/conversations"}
-                className="relative rounded-lg p-2 text-charcoal/70 transition hover:bg-white hover:text-forest-700"
-                aria-label="Messages"
+                className="relative min-h-11 min-w-11 rounded-lg p-2 text-charcoal/70 transition hover:bg-white hover:text-forest-700"
+                aria-label={t("nav.messages")}
               >
                 <MessagesSquare className="h-5 w-5" aria-hidden />
                 {messages > 0 ? (
@@ -210,8 +212,8 @@ export function DashboardLayout({ variant }: { variant: Variant }) {
               </Link>
               <Link
                 to={variant === "admin" ? "/admin/notifications" : variant === "seller" ? "/seller/notifications" : "/dashboard/notifications"}
-                className="relative rounded-lg p-2 text-charcoal/70 transition hover:bg-white hover:text-forest-700"
-                aria-label="Notifications"
+                className="relative min-h-11 min-w-11 rounded-lg p-2 text-charcoal/70 transition hover:bg-white hover:text-forest-700"
+                aria-label={t("nav.notifications")}
               >
                 <Bell className="h-5 w-5" aria-hidden />
                 {notifications > 0 ? (
@@ -220,7 +222,7 @@ export function DashboardLayout({ variant }: { variant: Variant }) {
                   </span>
                 ) : null}
               </Link>
-              <Link to={variant === "admin" ? "/admin/profile" : variant === "seller" ? "/seller/profile" : "/dashboard/profile"} aria-label="Account">
+              <Link to={variant === "admin" ? "/admin/profile" : variant === "seller" ? "/seller/profile" : "/dashboard/profile"} aria-label={t("nav.account")}>
                 <Avatar name={user.fullName} size="sm" />
               </Link>
             </div>
@@ -237,29 +239,29 @@ export function DashboardLayout({ variant }: { variant: Variant }) {
   );
 }
 
-function buildGroups(variant: Variant, isSeller: boolean): NavGroup[] {
+function buildGroups(variant: Variant, isSeller: boolean, t: (key: string) => string): NavGroup[] {
   if (variant === "seller") {
     return [
       {
-        title: "Overview",
+        title: t("dashboard.group.overview"),
         items: [
-          { to: "/seller", label: "Dashboard", icon: LayoutDashboard, end: true },
-          { to: "/seller/products", label: "My products", icon: Package, end: true },
-          { to: "/seller/products/new", label: "Add product", icon: PlusCircle },
+          { to: "/seller", label: t("dashboard.nav.overview"), icon: LayoutDashboard, end: true },
+          { to: "/seller/products", label: t("dashboard.nav.myProducts"), icon: Package, end: true },
+          { to: "/seller/products/new", label: t("dashboard.nav.addProduct"), icon: PlusCircle },
         ],
       },
       {
-        title: "Connect",
+        title: t("dashboard.group.connect"),
         items: [
-          { to: "/seller/conversations", label: "Messages", icon: MessagesSquare, badge: "messages" },
-          { to: "/seller/notifications", label: "Notifications", icon: Bell, badge: "notifications" },
+          { to: "/seller/conversations", label: t("dashboard.nav.messages"), icon: MessagesSquare, badge: "messages" },
+          { to: "/seller/notifications", label: t("dashboard.nav.notifications"), icon: Bell, badge: "notifications" },
         ],
       },
       {
-        title: "Account",
+        title: t("dashboard.group.account"),
         items: [
-          { to: "/seller/profile", label: "Seller profile", icon: Store },
-          { to: "/dashboard", label: "Buyer view", icon: ShoppingBasket },
+          { to: "/seller/profile", label: t("dashboard.nav.sellerProfile"), icon: Store },
+          { to: "/dashboard", label: t("dashboard.nav.buyerView"), icon: ShoppingBasket },
         ],
       },
     ];
@@ -268,37 +270,37 @@ function buildGroups(variant: Variant, isSeller: boolean): NavGroup[] {
   if (variant === "admin") {
     return [
       {
-        title: "Overview",
+        title: t("dashboard.group.overview"),
         items: [
-          { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
-          { to: "/admin/products", label: "Product moderation", icon: ClipboardCheck },
-          { to: "/admin/reports", label: "Reports", icon: Flag },
+          { to: "/admin", label: t("dashboard.nav.overview"), icon: LayoutDashboard, end: true },
+          { to: "/admin/products", label: t("dashboard.nav.productModeration"), icon: ClipboardCheck },
+          { to: "/admin/reports", label: t("dashboard.nav.reports"), icon: Flag },
         ],
       },
       {
-        title: "Marketplace data",
+        title: t("dashboard.group.marketplaceData"),
         items: [
-          { to: "/admin/prices", label: "Market prices", icon: TrendingUp },
-          { to: "/admin/categories", label: "Categories", icon: Tags },
-          { to: "/admin/markets", label: "Markets", icon: Store },
-          { to: "/admin/locations", label: "Locations", icon: MapPin },
-          { to: "/admin/units", label: "Units", icon: Ruler },
+          { to: "/admin/prices", label: t("dashboard.nav.marketPrices"), icon: TrendingUp },
+          { to: "/admin/categories", label: t("dashboard.nav.categories"), icon: Tags },
+          { to: "/admin/markets", label: t("dashboard.nav.markets"), icon: Store },
+          { to: "/admin/locations", label: t("dashboard.nav.locations"), icon: MapPin },
+          { to: "/admin/units", label: t("dashboard.nav.units"), icon: Ruler },
         ],
       },
       {
-        title: "People",
+        title: t("dashboard.group.people"),
         items: [
-          { to: "/admin/users", label: "Users", icon: Users },
-          { to: "/admin/conversations", label: "Messages", icon: MessagesSquare, badge: "messages" },
-          { to: "/admin/notifications", label: "Notifications", icon: Bell, badge: "notifications" },
+          { to: "/admin/users", label: t("dashboard.nav.users"), icon: Users },
+          { to: "/admin/conversations", label: t("dashboard.nav.messages"), icon: MessagesSquare, badge: "messages" },
+          { to: "/admin/notifications", label: t("dashboard.nav.notifications"), icon: Bell, badge: "notifications" },
         ],
       },
       {
-        title: "Platform",
+        title: t("dashboard.group.platform"),
         items: [
-          { to: "/admin/announcements", label: "Announcements", icon: Megaphone },
-          { to: "/admin/audit-logs", label: "Audit logs", icon: ScrollText },
-          { to: "/", label: "Public site", icon: Home },
+          { to: "/admin/announcements", label: t("dashboard.nav.announcements"), icon: Megaphone },
+          { to: "/admin/audit-logs", label: t("dashboard.nav.auditLogs"), icon: ScrollText },
+          { to: "/", label: t("dashboard.nav.publicSite"), icon: Home },
         ],
       },
     ];
@@ -306,31 +308,31 @@ function buildGroups(variant: Variant, isSeller: boolean): NavGroup[] {
 
   return [
     {
-      title: "Explore",
+      title: t("dashboard.group.explore"),
       items: [
-        { to: "/dashboard", label: "Overview", icon: LayoutDashboard, end: true },
-        { to: "/dashboard/browse", label: "Browse products", icon: ShoppingBasket },
-        { to: "/dashboard/compare", label: "Compare prices", icon: LineChart },
-        { to: "/dashboard/saved", label: "Saved products", icon: Bookmark },
+        { to: "/dashboard", label: t("dashboard.nav.overview"), icon: LayoutDashboard, end: true },
+        { to: "/dashboard/browse", label: t("dashboard.nav.browseProducts"), icon: ShoppingBasket },
+        { to: "/dashboard/compare", label: t("dashboard.nav.comparePrices"), icon: LineChart },
+        { to: "/dashboard/saved", label: t("dashboard.nav.savedProducts"), icon: Bookmark },
       ],
     },
     {
-      title: "Connect",
+      title: t("dashboard.group.connect"),
       items: [
-        { to: "/dashboard/conversations", label: "Messages", icon: MessagesSquare, badge: "messages" },
-        { to: "/dashboard/notifications", label: "Notifications", icon: Bell, badge: "notifications" },
-        { to: "/dashboard/reports", label: "My reports", icon: Flag },
+        { to: "/dashboard/conversations", label: t("dashboard.nav.messages"), icon: MessagesSquare, badge: "messages" },
+        { to: "/dashboard/notifications", label: t("dashboard.nav.notifications"), icon: Bell, badge: "notifications" },
+        { to: "/dashboard/reports", label: t("dashboard.nav.myReports"), icon: Flag },
       ],
     },
     {
-      title: "Account",
+      title: t("dashboard.group.account"),
       items: [
-        { to: "/dashboard/profile", label: "Profile", icon: User },
-        { to: "/dashboard/settings", label: "Security", icon: Settings },
+        { to: "/dashboard/profile", label: t("dashboard.nav.profile"), icon: User },
+        { to: "/dashboard/settings", label: t("dashboard.nav.security"), icon: Settings },
         ...(isSeller
-          ? [{ to: "/seller", label: "Seller dashboard", icon: Store }]
-          : [{ to: "/dashboard/become-seller", label: "Become a seller", icon: Store }]),
-        { to: "/dashboard/switch", label: "Switch workspace", icon: ArrowLeftRight },
+          ? [{ to: "/seller", label: t("dashboard.nav.sellerDashboard"), icon: Store }]
+          : [{ to: "/dashboard/become-seller", label: t("dashboard.nav.becomeSeller"), icon: Store }]),
+        { to: "/dashboard/switch", label: t("dashboard.nav.switchWorkspace"), icon: ArrowLeftRight },
       ],
     },
   ];

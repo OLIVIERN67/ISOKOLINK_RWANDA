@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { ChevronDown, LayoutDashboard, Menu, Store, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useI18n, LANGUAGE_LABELS, type Language } from "../context/I18nContext";
+import { userApi } from "../services/api";
 import { cn } from "../utils/cn";
 import { Logo } from "./Logo";
 import { Avatar } from "./ui/Avatar";
@@ -28,12 +29,19 @@ export function Navbar() {
 
   const dashboardLink = hasRole("admin") ? "/admin" : hasRole("seller") ? "/seller" : "/dashboard";
 
+  function handleLanguageChange(next: Language) {
+    setLanguage(next);
+    if (user) {
+      void userApi.update({ preferredLanguage: next }).catch(() => undefined);
+    }
+  }
+
   return (
     <header className="sticky top-0 z-40 border-b border-forest-100 bg-cream/95 backdrop-blur supports-[backdrop-filter]:bg-cream/80">
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <Logo />
 
-        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Main navigation">
+        <nav className="hidden items-center gap-0.5 lg:flex" aria-label={t("nav.mainNavigation")}>
           {publicLinks.map((link) => (
             <NavLink
               key={link.to}
@@ -54,7 +62,7 @@ export function Navbar() {
             <select
               id="language-select"
               value={language}
-              onChange={(event) => setLanguage(event.target.value as Language)}
+              onChange={(event) => handleLanguageChange(event.target.value as Language)}
               className="h-9 appearance-none rounded-lg border border-forest-200 bg-white py-0 pl-2.5 pr-7 text-xs font-semibold text-charcoal focus:border-forest-500"
             >
               {(Object.keys(LANGUAGE_LABELS) as Language[]).map((code) => (
@@ -91,10 +99,10 @@ export function Navbar() {
 
         <button
           type="button"
-          className="rounded-lg p-2 text-charcoal hover:bg-forest-50 lg:hidden"
+          className="min-h-11 min-w-11 rounded-lg p-2 text-charcoal hover:bg-forest-50 lg:hidden"
           onClick={() => setOpen((value) => !value)}
           aria-expanded={open}
-          aria-label="Toggle navigation menu"
+          aria-label={t("nav.toggleMenu")}
         >
           {open ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
         </button>
@@ -123,7 +131,7 @@ export function Navbar() {
                 {hasRole("seller") ? (
                   <Link to={`/sellers/${user.id}`} className="btn-outline mt-2 w-full">
                     <Store className="h-4 w-4" aria-hidden />
-                    My storefront
+                    {t("nav.myStorefront")}
                   </Link>
                 ) : null}
               </>
@@ -145,7 +153,7 @@ export function Navbar() {
                 id="mobile-language"
                 className="select"
                 value={language}
-                onChange={(event) => setLanguage(event.target.value as Language)}
+                onChange={(event) => handleLanguageChange(event.target.value as Language)}
               >
                 {(Object.keys(LANGUAGE_LABELS) as Language[]).map((code) => (
                   <option key={code} value={code}>

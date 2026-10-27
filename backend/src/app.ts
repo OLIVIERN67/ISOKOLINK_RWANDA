@@ -55,7 +55,7 @@ app.use(
     },
     credentials: true,
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Accept"],
+    allowedHeaders: ["Content-Type", "Accept", "Accept-Language"],
     maxAge: 600,
   }),
 );

@@ -37,7 +37,7 @@ export function AuthLayout() {
             Stronger links between Rwandan farms, markets, and families.
           </h1>
           <p className="mt-4 text-sm leading-7 text-white/70">
-            Join a marketplace built on verified sellers, transparent prices, and direct conversations.
+            Join a marketplace built on reviewed listings, transparent prices, and direct conversations.
           </p>
           <div className="mt-8 space-y-3">
             {[

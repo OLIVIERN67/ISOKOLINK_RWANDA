@@ -31,6 +31,7 @@ export interface ProductRow extends RowDataPacket {
   market_id: number | null;
   market_name: string | null;
   seller_id: number;
+  seller_account_status: string;
   seller_full_name: string;
   seller_business_name: string | null;
   seller_profile_image: string | null;
@@ -53,7 +54,8 @@ export const PRODUCT_SELECT = `
          u.factor_to_base,
          p.location_id, l.name AS district_name, lp.name AS province_name,
          p.market_id, m.name AS market_name,
-         p.seller_id, su.full_name AS seller_full_name, sp.business_name AS seller_business_name,
+         p.seller_id, su.status AS seller_account_status, su.full_name AS seller_full_name,
+         sp.business_name AS seller_business_name,
          sp.profile_image_url AS seller_profile_image, sp.contact_phone AS seller_phone,
          sp.public_contact_visibility AS seller_contact_visible, sp.description AS seller_description,
          sp.location_id AS seller_location_id, sl.name AS seller_district_name, sp.status AS seller_status,

@@ -84,7 +84,7 @@ export function HomePage() {
           <div className="animate-fade-up">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur">
               <BadgeCheck className="h-4 w-4 text-harvest" aria-hidden />
-              Rwanda&apos;s verified food marketplace
+              Rwanda&apos;s food marketplace with reviewed listings
             </span>
             <h1 className="mt-5 max-w-xl font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl">
               Fresh from Rwandan farms to your table.
@@ -143,7 +143,7 @@ export function HomePage() {
             <div className="absolute -left-6 top-10 w-52 rounded-2xl border border-white/20 bg-white/95 p-3.5 shadow-lift backdrop-blur">
               <div className="flex items-center gap-2 text-forest-700">
                 <Sprout className="h-4 w-4" aria-hidden />
-                <p className="text-xs font-bold">Verified sellers</p>
+                <p className="text-xs font-bold">Registered sellers</p>
               </div>
               <p className="mt-1 text-[11px] leading-5 text-charcoal/60">
                 Every listing is reviewed before it goes live.
@@ -165,7 +165,7 @@ export function HomePage() {
       <section className="border-b border-forest-100 bg-white">
         <div className="container-page grid grid-cols-2 divide-x divide-forest-100 py-5 sm:grid-cols-4">
           {[
-            { label: "Verified listings", value: productsTotal ?? "—", icon: Store },
+            { label: "Approved listings", value: productsTotal ?? "—", icon: Store },
             { label: "Market price records", value: observationsTotal ?? "—", icon: TrendingUp },
             { label: "Food categories", value: categories.length || "—", icon: Sprout },
             { label: "Districts covered", value: locations.districts.length || 30, icon: MapPin },
@@ -223,7 +223,7 @@ export function HomePage() {
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-forest-600">Fresh listings</p>
               <h2 className="mt-1 font-display text-2xl font-bold">Featured food products</h2>
-              <p className="mt-1 text-sm text-charcoal/55">Approved and available from verified sellers.</p>
+              <p className="mt-1 text-sm text-charcoal/55">Approved and available from registered sellers.</p>
             </div>
             <Link to="/products" className="inline-flex items-center gap-1 text-sm font-semibold text-forest-700 hover:underline">
               View all <ArrowRight className="h-4 w-4" aria-hidden />

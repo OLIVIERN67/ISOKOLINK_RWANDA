@@ -12,6 +12,7 @@ import {
 import { getApiError, notificationApi } from "../services/api";
 import type { NotificationItem, PaginationMeta } from "../types";
 import { useToast } from "../context/ToastContext";
+import { useI18n } from "../context/I18nContext";
 import { formatRelative } from "../utils/format";
 import { cn } from "../utils/cn";
 import { Button } from "./ui/Button";
@@ -29,6 +30,7 @@ function iconFor(type: string) {
 }
 
 export function NotificationsView() {
+  const { t } = useI18n();
   const { success, error } = useToast();
   const navigate = useNavigate();
   const [items, setItems] = useState<NotificationItem[]>([]);
@@ -77,7 +79,7 @@ export function NotificationsView() {
       setItems((current) => current.map((entry) => ({ ...entry, isRead: true })));
       setMeta((current) => (current ? { ...current, total: 0 } : current));
       window.dispatchEvent(new Event("isokolink:unread"));
-      success("All notifications marked as read.");
+      success(t("notifications.markAllRead"));
     } catch (requestError) {
       error(getApiError(requestError).message);
     } finally {
@@ -88,12 +90,12 @@ export function NotificationsView() {
   return (
     <div>
       <PageHeader
-        title="Notifications"
-        subtitle="Updates about listings, messages, reports, and your account."
+        title={t("nav.notifications")}
+        subtitle={t("notifications.description")}
         actions={
           <Button type="button" variant="outline" onClick={markAll} loading={markingAll}>
             <CheckCheck className="h-4 w-4" aria-hidden />
-            Mark all as read
+            {t("notifications.markAllRead")}
           </Button>
         }
       />
@@ -107,7 +109,7 @@ export function NotificationsView() {
           }}
           className={cn("flex-1 rounded-lg px-3 py-2 transition sm:flex-none", !unreadOnly ? "bg-forest-600 text-white" : "text-charcoal/60 hover:bg-forest-50")}
         >
-          All notifications
+          {t("notifications.all")}
         </button>
         <button
           type="button"
@@ -117,7 +119,7 @@ export function NotificationsView() {
           }}
           className={cn("flex-1 rounded-lg px-3 py-2 transition sm:flex-none", unreadOnly ? "bg-forest-600 text-white" : "text-charcoal/60 hover:bg-forest-50")}
         >
-          Unread only
+          {t("notifications.unreadOnly")}
         </button>
       </div>
 
@@ -127,11 +129,11 @@ export function NotificationsView() {
         <ErrorState message={loadError} onRetry={() => void load()} />
       ) : items.length === 0 ? (
         <EmptyState
-          title={unreadOnly ? "No unread notifications" : "No notifications yet"}
+          title={unreadOnly ? t("notifications.noUnread") : t("notifications.none")}
           description={
             unreadOnly
-              ? "You are all caught up."
-              : "Updates about your products, conversations, and account will appear here."
+              ? t("notifications.caughtUp")
+              : t("notifications.emptyDescription")
           }
           icon={<Bell className="h-6 w-6" aria-hidden />}
         />
@@ -165,9 +167,9 @@ export function NotificationsView() {
                     <span className="shrink-0 text-[10px] text-charcoal/40">{formatRelative(item.createdAt)}</span>
                   </span>
                   {item.body ? <span className="mt-0.5 block text-xs leading-5 text-charcoal/55">{item.body}</span> : null}
-                  {item.link ? <span className="mt-1 block text-[11px] font-semibold text-forest-700">Open →</span> : null}
+                  {item.link ? <span className="mt-1 block text-[11px] font-semibold text-forest-700">{t("notifications.open")}</span> : null}
                 </span>
-                {!item.isRead ? <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-forest-600" aria-label="Unread" /> : null}
+                {!item.isRead ? <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-forest-600" aria-label={t("notifications.unread")} /> : null}
               </button>
             );
           })}

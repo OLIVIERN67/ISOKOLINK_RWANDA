@@ -1,130 +1,91 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import {
+  LANGUAGE_LABELS,
+  LANGUAGE_LOCALES,
+  dictionaries,
+  isLanguage,
+  normalizeLanguage,
+  type Language,
+} from "../i18n";
+import { setFormatLocale } from "../utils/format";
 
-export type Language = "en" | "rw" | "fr";
+export { LANGUAGE_LABELS, type Language };
 
-interface Dictionary {
-  [key: string]: string;
-}
-
-const dictionaries: Record<Language, Dictionary> = {
-  en: {
-    "nav.home": "Home",
-    "nav.products": "Products",
-    "nav.prices": "Food prices",
-    "nav.about": "About",
-    "nav.contact": "Contact",
-    "nav.faq": "FAQ",
-    "nav.dashboard": "Dashboard",
-    "nav.seller": "Seller dashboard",
-    "nav.admin": "Administration",
-    "common.signIn": "Sign in",
-    "common.register": "Create account",
-    "common.logout": "Sign out",
-    "common.search": "Search",
-    "common.loading": "Loading…",
-    "common.retry": "Try again",
-    "common.save": "Save",
-    "common.cancel": "Cancel",
-    "common.viewAll": "View all",
-    "common.language": "Language",
-    "footer.tagline": "Connecting Rwandan food producers, sellers, and buyers through transparent, verified market information.",
-    "footer.explore": "Explore",
-    "footer.account": "Account",
-    "footer.legal": "Legal",
-    "footer.rights": "All rights reserved.",
-  },
-  rw: {
-    "nav.home": "Ahabanza",
-    "nav.products": "Ibicuruzwa",
-    "nav.prices": "Ibiciro by'ibiribwa",
-    "nav.about": "Abo turi bo",
-    "nav.contact": "Twandikire",
-    "nav.faq": "Ibibazo bikunze kubazwa",
-    "nav.dashboard": "Ikibaho",
-    "nav.seller": "Ikibaho cy'umucuruzi",
-    "nav.admin": "Ubuyobozi",
-    "common.signIn": "Injira",
-    "common.register": "Fungura konti",
-    "common.logout": "Sohoka",
-    "common.search": "Shakisha",
-    "common.loading": "Biratunganywa…",
-    "common.retry": "Ongera ugerageze",
-    "common.save": "Bika",
-    "common.cancel": "Hagarika",
-    "common.viewAll": "Reba byose",
-    "common.language": "Ururimi",
-    "footer.tagline": "Duhuza abahinzi, abacuruzi n'abaguzi b'ibiribwa mu Rwanda hifashishijwe amakuru yizewe y'isoko.",
-    "footer.explore": "Shakisha",
-    "footer.account": "Konti",
-    "footer.legal": "Amategeko",
-    "footer.rights": "Uburenganzira bwose burafitwe.",
-  },
-  fr: {
-    "nav.home": "Accueil",
-    "nav.products": "Produits",
-    "nav.prices": "Prix alimentaires",
-    "nav.about": "À propos",
-    "nav.contact": "Contact",
-    "nav.faq": "FAQ",
-    "nav.dashboard": "Tableau de bord",
-    "nav.seller": "Espace vendeur",
-    "nav.admin": "Administration",
-    "common.signIn": "Se connecter",
-    "common.register": "Créer un compte",
-    "common.logout": "Se déconnecter",
-    "common.search": "Rechercher",
-    "common.loading": "Chargement…",
-    "common.retry": "Réessayer",
-    "common.save": "Enregistrer",
-    "common.cancel": "Annuler",
-    "common.viewAll": "Voir tout",
-    "common.language": "Langue",
-    "footer.tagline": "Relier les producteurs, vendeurs et acheteurs rwandais grâce à des informations de marché transparentes et vérifiées.",
-    "footer.explore": "Explorer",
-    "footer.account": "Compte",
-    "footer.legal": "Mentions légales",
-    "footer.rights": "Tous droits réservés.",
-  },
-};
-
-export const LANGUAGE_LABELS: Record<Language, string> = {
-  en: "English",
-  rw: "Kinyarwanda",
-  fr: "Français",
-};
+export type TranslationParams = Record<string, string | number>;
 
 interface I18nContextValue {
   language: Language;
+  locale: string;
   setLanguage: (language: Language) => void;
-  t: (key: string, fallback?: string) => string;
+  t: (key: string, params?: TranslationParams | string, fallback?: string) => string;
+  tp: (key: string, count: number, params?: TranslationParams) => string;
 }
 
 const I18nContext = createContext<I18nContextValue | undefined>(undefined);
 const STORAGE_KEY = "isokolink.language";
 
-function readInitialLanguage(): Language {
+export function readStoredLanguage(): Language {
   if (typeof window === "undefined") return "en";
   const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (stored === "en" || stored === "rw" || stored === "fr") return stored;
-  return "en";
+  if (isLanguage(stored)) return stored;
+  const browserLanguage = window.navigator.languages?.[0] ?? window.navigator.language;
+  return normalizeLanguage(browserLanguage);
+}
+
+function interpolate(template: string, params?: TranslationParams): string {
+  if (!params) return template;
+  return template.replace(/\{(\w+)\}/g, (match, key: string) =>
+    Object.prototype.hasOwnProperty.call(params, key) ? String(params[key]) : match,
+  );
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(readInitialLanguage);
+  const [language, setLanguageState] = useState<Language>(readStoredLanguage);
 
   useEffect(() => {
     document.documentElement.lang = language;
     window.localStorage.setItem(STORAGE_KEY, language);
+    setFormatLocale(LANGUAGE_LOCALES[language]);
   }, [language]);
 
   const setLanguage = useCallback((next: Language) => setLanguageState(next), []);
 
   const t = useCallback(
-    (key: string, fallback?: string) => dictionaries[language][key] ?? dictionaries.en[key] ?? fallback ?? key,
+    (key: string, params?: TranslationParams | string, fallback?: string) => {
+      const parameters = typeof params === "object" ? params : undefined;
+      const fallbackText = typeof params === "string" ? params : fallback;
+      const current = dictionaries[language];
+      const english = dictionaries.en;
+
+      let template: string | undefined;
+      if (parameters && typeof parameters.count === "number") {
+        const pluralKey = `${key}.${parameters.count === 1 ? "one" : "other"}`;
+        template = current[pluralKey] ?? english[pluralKey];
+      }
+      template = template ?? current[key] ?? english[key] ?? fallbackText ?? key;
+      return interpolate(template, parameters);
+    },
     [language],
   );
 
-  const value = useMemo(() => ({ language, setLanguage, t }), [language, setLanguage, t]);
+  const tp = useCallback(
+    (key: string, count: number, params?: TranslationParams) =>
+      t(key, { ...params, count }),
+    [t],
+  );
+
+  const value = useMemo(
+    () => ({ language, locale: LANGUAGE_LOCALES[language], setLanguage, t, tp }),
+    [language, setLanguage, t, tp],
+  );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

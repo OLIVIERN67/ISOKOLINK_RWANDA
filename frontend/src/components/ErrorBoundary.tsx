@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { AlertTriangle } from "lucide-react";
+import { translateCurrent } from "../i18n";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -30,11 +31,11 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBound
             <AlertTriangle className="h-7 w-7" aria-hidden />
           </span>
           <div>
-            <h1 className="text-xl font-bold">Something went wrong</h1>
-            <p className="mt-1 max-w-md text-sm text-charcoal/60">{this.state.message}</p>
+            <h1 className="text-xl font-bold">{translateCurrent("errors.unexpectedTitle")}</h1>
+            <p className="mt-1 max-w-md text-sm text-charcoal/60">{this.state.message || translateCurrent("errors.unexpectedDetails")}</p>
           </div>
           <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
-            Reload the page
+            {translateCurrent("common.reloadPage")}
           </button>
         </div>
       );

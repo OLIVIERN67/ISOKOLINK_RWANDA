@@ -36,20 +36,16 @@ import {
   formatDate,
   formatRelative,
 } from "../utils/format";
-
-const REPORT_REASONS = [
-  "Misleading price",
-  "Suspicious listing",
-  "Potential scam",
-  "Inappropriate content",
-  "Incorrect product information",
-  "Other",
-] as const;
+import { REPORT_REASONS } from "../utils/reports";
+import { productWhatsAppUrl } from "../utils/whatsapp";
+import { WhatsAppContactButton } from "../components/WhatsAppContactButton";
+import { useI18n } from "../context/I18nContext";
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const productId = Number(id);
   const { user } = useAuth();
+  const { t, language } = useI18n();
   const { success, error } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -112,6 +108,9 @@ export function ProductDetailPage() {
   const images = product.images && product.images.length > 0 ? product.images : [];
   const currentImage = images[activeImage]?.url ?? null;
   const sellerName = product.seller.businessName || product.seller.fullName;
+  const whatsappUrl = isOwner
+    ? null
+    : productWhatsAppUrl(product, `${window.location.origin}/products/${product.id}`, language);
 
   async function shareProduct() {
     const url = window.location.href;
@@ -284,9 +283,16 @@ export function ProductDetailPage() {
                   sellerName={sellerName}
                   productId={product.id}
                   productName={product.name}
-                  className="sm:col-span-2"
+                  className={whatsappUrl ? "w-full" : "w-full sm:col-span-2"}
                 />
               )}
+              {whatsappUrl ? (
+                <WhatsAppContactButton
+                  href={whatsappUrl}
+                  className="w-full"
+                  aria-label={t("common.contactWhatsAppProduct", { seller: sellerName, product: product.name })}
+                />
+              ) : null}
               <Button type="button" variant="outline" onClick={shareProduct}>
                 <Share2 className="h-4 w-4" aria-hidden />
                 Share

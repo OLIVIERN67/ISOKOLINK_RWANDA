@@ -41,17 +41,17 @@ export function Footer() {
           <ul className="mt-3 space-y-2 text-sm text-charcoal/60">
             <li><Link className="hover:text-forest-700" to="/login">{t("common.signIn")}</Link></li>
             <li><Link className="hover:text-forest-700" to="/register">{t("common.register")}</Link></li>
-            <li><Link className="hover:text-forest-700" to="/dashboard">Dashboard</Link></li>
-            <li><Link className="hover:text-forest-700" to="/dashboard/become-seller">Become a seller</Link></li>
+            <li><Link className="hover:text-forest-700" to="/dashboard">{t("common.dashboard")}</Link></li>
+            <li><Link className="hover:text-forest-700" to="/dashboard/become-seller">{t("common.becomeSeller")}</Link></li>
           </ul>
         </div>
 
         <div>
           <h2 className="text-sm font-bold uppercase tracking-wide text-charcoal">{t("footer.legal")}</h2>
           <ul className="mt-3 space-y-2 text-sm text-charcoal/60">
-            <li><Link className="hover:text-forest-700" to="/privacy">Privacy policy</Link></li>
-            <li><Link className="hover:text-forest-700" to="/terms">Terms of service</Link></li>
-            <li><Link className="hover:text-forest-700" to="/faq">FAQ</Link></li>
+            <li><Link className="hover:text-forest-700" to="/privacy">{t("footer.privacy")}</Link></li>
+            <li><Link className="hover:text-forest-700" to="/terms">{t("footer.terms")}</Link></li>
+            <li><Link className="hover:text-forest-700" to="/faq">{t("nav.faq")}</Link></li>
           </ul>
           <div className="mt-4 space-y-2 text-xs text-charcoal/55">
             <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-forest-500" aria-hidden /> Kigali, Rwanda</p>
@@ -64,7 +64,7 @@ export function Footer() {
       <div className="border-t border-forest-100">
         <div className="container-page flex flex-col items-center justify-between gap-2 py-4 text-xs text-charcoal/50 sm:flex-row">
           <p>© {year} ISOKOLINK RWANDA. {t("footer.rights")}</p>
-          <p>Verified food market information for Rwanda.</p>
+          <p>{t("footer.transparent")}</p>
         </div>
       </div>
     </footer>

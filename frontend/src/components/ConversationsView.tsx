@@ -5,6 +5,7 @@ import { getApiError, messagingApi } from "../services/api";
 import type { Conversation, ConversationSummary } from "../types";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import { useI18n } from "../context/I18nContext";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { cn } from "../utils/cn";
 import { formatCurrency, formatDayLabel, formatRelative, formatTime } from "../utils/format";
@@ -14,10 +15,11 @@ import { Button } from "./ui/Button";
 import { EmptyState, ErrorState, LoadingBlock } from "./ui/States";
 import { PageHeader } from "./ui/PageHeader";
 
-export function ConversationsView({ basePath, title = "Messages" }: { basePath: string; title?: string }) {
+export function ConversationsView({ basePath, title }: { basePath: string; title?: string }) {
   const { id } = useParams<{ id: string }>();
   const conversationId = id ? Number(id) : null;
   const { user } = useAuth();
+  const { t } = useI18n();
   const { error: toastError } = useToast();
   const navigate = useNavigate();
 
@@ -135,8 +137,8 @@ export function ConversationsView({ basePath, title = "Messages" }: { basePath: 
   return (
     <div>
       <PageHeader
-        title={title}
-        subtitle="Keep all buyer and seller conversations in one place."
+        title={title ?? t("nav.messages")}
+        subtitle={t("messages.subtitle")}
         actions={
           <Button
             type="button"
@@ -144,7 +146,7 @@ export function ConversationsView({ basePath, title = "Messages" }: { basePath: 
             onClick={() => navigate("/products")}
           >
             <MessageSquarePlus className="h-4 w-4" aria-hidden />
-            Start from a product
+            {t("messages.startFromProduct")}
           </Button>
         }
       />
@@ -158,9 +160,9 @@ export function ConversationsView({ basePath, title = "Messages" }: { basePath: 
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search conversations…"
+                placeholder={t("messages.search")}
                 className="input pl-9"
-                aria-label="Search conversations"
+                aria-label={t("messages.search")}
               />
             </div>
           </div>
@@ -173,7 +175,7 @@ export function ConversationsView({ basePath, title = "Messages" }: { basePath: 
               </div>
             ) : list.length === 0 ? (
               <p className="p-5 text-center text-sm text-charcoal/50">
-                No conversations yet. Open a product and message its seller.
+                {t("messages.noConversations")}
               </p>
             ) : (
               list.map((item) => {
@@ -198,7 +200,7 @@ export function ConversationsView({ basePath, title = "Messages" }: { basePath: 
                       </div>
                       <p className="mt-0.5 truncate text-[11px] text-charcoal/50">
                         {item.productName ? `${item.productName} · ` : ""}
-                        {item.lastMessage ?? "No messages yet"}
+                        {item.lastMessage ?? t("messages.noMessagesShort")}
                       </p>
                     </div>
                     {item.unreadCount > 0 && !active ? (
@@ -217,7 +219,7 @@ export function ConversationsView({ basePath, title = "Messages" }: { basePath: 
           {!conversationId ? (
             <div className="flex flex-1 items-center justify-center">
               <EmptyState
-                title="Select a conversation"
+                title={t("messages.select")}
                 description="Choose a conversation from the list to read and reply to messages."
                 icon={<MessageSquarePlus className="h-6 w-6" aria-hidden />}
               />
@@ -233,7 +235,7 @@ export function ConversationsView({ basePath, title = "Messages" }: { basePath: 
               <header className="border-b border-gray-100 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-start gap-2">
-                    <Link to={basePath} className="mt-0.5 rounded-lg p-1 text-charcoal/50 hover:bg-forest-50 hover:text-forest-700 lg:hidden" aria-label="Back to conversations">
+                    <Link to={basePath} className="mt-0.5 rounded-lg p-1 text-charcoal/50 hover:bg-forest-50 hover:text-forest-700 lg:hidden" aria-label={t("messages.backToConversations")}>
                       <ArrowLeft className="h-4 w-4" aria-hidden />
                     </Link>
                     <div className="min-w-0">
@@ -265,7 +267,7 @@ export function ConversationsView({ basePath, title = "Messages" }: { basePath: 
 
               <div className="flex-1 space-y-3 overflow-y-auto bg-cream/40 p-4 lg:max-h-[calc(100vh-24rem)]">
                 {conversation.messages.length === 0 ? (
-                  <p className="py-4 text-center text-sm text-charcoal/50">No messages in this conversation yet.</p>
+                  <p className="py-4 text-center text-sm text-charcoal/50">{t("messages.noMessages")}</p>
                 ) : (
                   conversation.messages.map((message, index) => {
                     const previous = conversation.messages[index - 1];
@@ -316,8 +318,8 @@ export function ConversationsView({ basePath, title = "Messages" }: { basePath: 
                     className="textarea min-h-[46px] max-h-32 flex-1 py-2.5"
                     rows={1}
                     maxLength={5000}
-                    placeholder="Write a message… (Enter to send, Shift+Enter for a new line)"
-                    aria-label="Message"
+                    placeholder={t("messages.composer")}
+                    aria-label={t("messages.label")}
                   />
                   <Button type="submit" loading={sending} disabled={!draft.trim()} className="h-[46px]">
                     <Send className="h-4 w-4" aria-hidden />

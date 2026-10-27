@@ -1,8 +1,9 @@
 # ISOKOLINK RWANDA
 
-A full-stack food marketplace for Rwanda. ISOKOLINK connects buyers with verified
-sellers, publishes admin-reviewed listings, tracks market price observations, and
-lets buyers and sellers talk directly without sharing phone numbers.
+A full-stack food marketplace for Rwanda. ISOKOLINK connects buyers with
+registered sellers, publishes admin-reviewed listings, tracks market price
+observations, and lets buyers and sellers talk directly without sharing phone
+numbers.
 
 - **Frontend:** React 18, Vite, TypeScript, Tailwind CSS, React Router, Axios,
   React Hook Form, Zod, Recharts

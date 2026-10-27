@@ -5,14 +5,23 @@ import type { Product } from "../types";
 import { assetUrl, formatCurrency, formatRelative, APPROVAL_LABELS, AVAILABILITY_LABELS, approvalTone } from "../utils/format";
 import { Badge } from "./ui/Badge";
 import { SaveButton } from "./SaveButton";
+import { WhatsAppContactButton } from "./WhatsAppContactButton";
+import { productWhatsAppUrl } from "../utils/whatsapp";
+import { useAuth } from "../context/AuthContext";
+import { useI18n } from "../context/I18nContext";
 
 export function ProductCard({ product, showStatus = false, onSaveChange }: { product: Product; showStatus?: boolean; onSaveChange?: (saved: boolean) => void }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+  const { t, language } = useI18n();
   const image = assetUrl(product.primaryImage);
   const [imageBroken, setImageBroken] = useState(false);
   const sellerName = product.seller.businessName || product.seller.fullName;
   const unavailable = product.availability !== "available";
+  const whatsappUrl = user?.id === product.seller.id
+    ? null
+    : productWhatsAppUrl(product, `${window.location.origin}/products/${product.id}`, language);
 
   return (
     <article className="group card flex h-full flex-col overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lift">
@@ -77,9 +86,9 @@ export function ProductCard({ product, showStatus = false, onSaveChange }: { pro
           </p>
         </div>
 
-        <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-2.5">
+        <div className="border-t border-gray-100 pt-2.5">
           <span className="text-[11px] text-charcoal/45">Updated {formatRelative(product.updatedAt)}</span>
-          <div className="flex items-center gap-1.5">
+          <div className="mt-2 flex flex-wrap items-center justify-end gap-1.5">
             <button
               type="button"
               onClick={() => navigate(`/products/${product.id}`, { state: { contact: true } })}
@@ -89,6 +98,13 @@ export function ProductCard({ product, showStatus = false, onSaveChange }: { pro
               <MessageCircle className="h-3.5 w-3.5" aria-hidden />
               Ask
             </button>
+            {whatsappUrl ? (
+              <WhatsAppContactButton
+                href={whatsappUrl}
+                className="!min-h-8 !gap-1.5 !rounded-lg !px-2.5 !py-1.5 !text-xs"
+                aria-label={t("common.contactWhatsAppProduct", { seller: sellerName, product: product.name })}
+              />
+            ) : null}
             <Link
               to={`/products/${product.id}`}
               state={{ from: location.pathname }}

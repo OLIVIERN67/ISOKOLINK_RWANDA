@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import { currentLanguage, translateCurrent } from "../i18n";
 import type {
   AdminStats,
   AdminUserDetail,
@@ -50,6 +51,11 @@ export const api = axios.create({
   headers: { Accept: "application/json" },
 });
 
+api.interceptors.request.use((config) => {
+  config.headers.set("Accept-Language", currentLanguage());
+  return config;
+});
+
 export function getApiError(error: unknown): ApiErrorShape {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<{ error?: { message?: string; code?: string; details?: unknown } }>;
@@ -58,12 +64,16 @@ export function getApiError(error: unknown): ApiErrorShape {
       ? (payload.details as Array<{ field: string; message: string }>)
       : undefined;
     if (payload?.message) return { message: payload.message, code: payload.code, details };
-    if (axiosError.code === "ECONNABORTED") return { message: "The request timed out. Please try again." };
-    if (!axiosError.response) return { message: "Cannot reach the server. Check your connection." };
-    return { message: "The request could not be completed." };
+    if (axiosError.code === "ECONNABORTED") {
+      return { message: translateCurrent("errors.timeout", "The request timed out. Please try again.") };
+    }
+    if (!axiosError.response) {
+      return { message: translateCurrent("errors.network", "Cannot reach the server. Check your connection.") };
+    }
+    return { message: translateCurrent("errors.generic", "The request could not be completed.") };
   }
   if (error instanceof Error) return { message: error.message };
-  return { message: "Something went wrong." };
+  return { message: translateCurrent("errors.unexpected", "Something went wrong.") };
 }
 
 export interface ListResult<T> {

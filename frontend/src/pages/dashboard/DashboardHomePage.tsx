@@ -283,7 +283,7 @@ export function DashboardHomePage() {
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
             <h2 className="font-display text-lg font-bold">Recommended for you</h2>
-            <p className="text-xs text-charcoal/50">Featured listings from verified sellers.</p>
+            <p className="text-xs text-charcoal/50">Featured listings from registered sellers.</p>
           </div>
           <Link to="/dashboard/browse" className="text-xs font-semibold text-forest-700 hover:underline">Browse all</Link>
         </div>

@@ -5,8 +5,10 @@ import { useDocumentTitle } from "../components/ScrollToTop";
 import { PageHeader } from "../components/ui/PageHeader";
 import { Button } from "../components/ui/Button";
 import { Field } from "../components/ui/Field";
+import { useI18n } from "../context/I18nContext";
 
 export function ContactPage() {
+  const { t } = useI18n();
   useDocumentTitle("Contact us");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -24,9 +26,9 @@ export function ContactPage() {
       <section className="border-b border-forest-100 bg-white">
         <div className="container-page py-10">
           <PageHeader
-            eyebrow="Contact"
-            title="Talk to the ISOKOLINK team"
-            subtitle="Questions about your account, a listing, or the marketplace? Send us a message and we will get back to you."
+            eyebrow={t("contact.eyebrow")}
+            title={t("contact.title")}
+            subtitle={t("contact.subtitle")}
           />
         </div>
       </section>
@@ -36,25 +38,25 @@ export function ContactPage() {
           {[
             {
               icon: Mail,
-              title: "Email",
+              title: t("contact.email"),
               body: "hello@isokolink.rw",
               href: "mailto:hello@isokolink.rw",
             },
             {
               icon: Phone,
-              title: "Phone",
+              title: t("contact.phone"),
               body: "+250 788 000 000",
               href: "tel:+250788000000",
             },
             {
               icon: MapPin,
-              title: "Office",
+              title: t("contact.office"),
               body: "Kigali, Rwanda",
             },
             {
               icon: Clock3,
-              title: "Support hours",
-              body: "Monday to Friday, 08:00 – 17:00 CAT",
+              title: t("contact.hours"),
+              body: t("contact.hoursValue"),
             },
           ].map((item) => (
             <div key={item.title} className="card flex items-start gap-3 p-4">
@@ -76,23 +78,22 @@ export function ContactPage() {
           <div className="rounded-xl bg-forest-50 p-4 text-xs leading-5 text-forest-900">
             <p className="flex items-center gap-1.5 font-semibold">
               <MessageSquare className="h-4 w-4" aria-hidden />
-              Reporting a listing?
+              {t("contact.reportingTitle")}
             </p>
             <p className="mt-1 text-forest-800/80">
-              Use the “Report listing” button on the product page so the report reaches the moderation queue with the
-              correct reference. For safety concerns, contact us directly.
+              {t("contact.reportingBody")}
             </p>
           </div>
         </div>
 
         <div className="card p-5 sm:p-6">
-          <h2 className="font-display text-lg font-bold">Send a message</h2>
+          <h2 className="font-display text-lg font-bold">{t("contact.sendMessage")}</h2>
           <p className="mt-1 text-sm text-charcoal/55">
-            This form opens your email app with the message ready to send. You can also email us directly.
+            {t("contact.formDescription")}
           </p>
           <form onSubmit={handleSubmit} className="mt-5 space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Your name" htmlFor="contact-name" required>
+              <Field label={t("contact.name")} htmlFor="contact-name" required>
                 <input
                   id="contact-name"
                   className="input"
@@ -101,7 +102,7 @@ export function ContactPage() {
                   required
                 />
               </Field>
-              <Field label="Email address" htmlFor="contact-email" required>
+              <Field label={t("contact.emailAddress")} htmlFor="contact-email" required>
                 <input
                   id="contact-email"
                   type="email"
@@ -112,7 +113,7 @@ export function ContactPage() {
                 />
               </Field>
             </div>
-            <Field label="Message" htmlFor="contact-body" required>
+            <Field label={t("contact.message")} htmlFor="contact-body" required>
               <textarea
                 id="contact-body"
                 className="textarea"
@@ -125,10 +126,10 @@ export function ContactPage() {
             </Field>
             <Button type="submit">
               <Send className="h-4 w-4" aria-hidden />
-              Open email draft
+              {t("contact.openEmail")}
             </Button>
             <p className="text-xs text-charcoal/45">
-              For account security, never send your password or session details in an email.
+              {t("contact.securityNotice")}
             </p>
           </form>
         </div>
@@ -136,10 +137,10 @@ export function ContactPage() {
 
       <div className="container-page pb-10">
         <div className="rounded-2xl border border-forest-100 bg-white p-5 text-sm text-charcoal/60">
-          Looking for quick answers? Visit the{" "}
-          <Link to="/faq" className="font-semibold text-forest-700 hover:underline">frequently asked questions</Link>{" "}
-          or review our{" "}
-          <Link to="/privacy" className="font-semibold text-forest-700 hover:underline">privacy policy</Link>.
+          {t("contact.quickAnswers")}{" "}
+          <Link to="/faq" className="font-semibold text-forest-700 hover:underline">{t("contact.faq")}</Link>{" "}
+          {t("contact.orReview")}{" "}
+          <Link to="/privacy" className="font-semibold text-forest-700 hover:underline">{t("contact.privacy")}</Link>.
         </div>
       </div>
     </div>

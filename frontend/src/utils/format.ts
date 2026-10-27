@@ -1,21 +1,23 @@
-const rwfFormatter = new Intl.NumberFormat("en-RW", {
-  maximumFractionDigits: 0,
-});
+let formatLocale = "en-RW";
 
-const decimalFormatter = new Intl.NumberFormat("en-RW", {
-  maximumFractionDigits: 2,
-});
+export function setFormatLocale(locale: string): void {
+  formatLocale = locale;
+}
+
+function numberFormatter(maximumFractionDigits: number): Intl.NumberFormat {
+  return new Intl.NumberFormat(formatLocale, { maximumFractionDigits });
+}
 
 export function formatCurrency(value: number | string | null | undefined, currency = "RWF"): string {
   const amount = Number(value ?? 0);
   if (!Number.isFinite(amount)) return `0 ${currency}`;
-  return `${rwfFormatter.format(amount)} ${currency}`;
+  return `${numberFormatter(0).format(amount)} ${currency}`;
 }
 
 export function formatAmount(value: number | string | null | undefined): string {
   const amount = Number(value ?? 0);
   if (!Number.isFinite(amount)) return "0";
-  return decimalFormatter.format(amount);
+  return numberFormatter(2).format(amount);
 }
 
 export function formatPricePerUnit(price: number, unitLabel: string, currency = "RWF"): string {
@@ -23,7 +25,7 @@ export function formatPricePerUnit(price: number, unitLabel: string, currency = 
 }
 
 export function formatNumber(value: number | string | null | undefined): string {
-  return rwfFormatter.format(Number(value ?? 0));
+  return numberFormatter(0).format(Number(value ?? 0));
 }
 
 function parseDate(value: string | null | undefined): Date | null {
@@ -36,13 +38,13 @@ function parseDate(value: string | null | undefined): Date | null {
 export function formatDate(value: string | null | undefined, fallback = "—"): string {
   const date = parseDate(value);
   if (!date) return fallback;
-  return date.toLocaleDateString("en-RW", { year: "numeric", month: "short", day: "numeric" });
+  return date.toLocaleDateString(formatLocale, { year: "numeric", month: "short", day: "numeric" });
 }
 
 export function formatDateTime(value: string | null | undefined, fallback = "—"): string {
   const date = parseDate(value);
   if (!date) return fallback;
-  return date.toLocaleString("en-RW", {
+  return date.toLocaleString(formatLocale, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -54,20 +56,21 @@ export function formatDateTime(value: string | null | undefined, fallback = "—
 export function formatTime(value: string | null | undefined): string {
   const date = parseDate(value);
   if (!date) return "";
-  return date.toLocaleTimeString("en-RW", { hour: "2-digit", minute: "2-digit" });
+  return date.toLocaleTimeString(formatLocale, { hour: "2-digit", minute: "2-digit" });
 }
 
 export function formatRelative(value: string | null | undefined): string {
   const date = parseDate(value);
   if (!date) return "—";
+  const relative = new Intl.RelativeTimeFormat(formatLocale, { numeric: "auto" });
   const diff = Date.now() - date.getTime();
   const minutes = Math.round(diff / 60000);
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 1) return relative.format(0, "second");
+  if (minutes < 60) return relative.format(-minutes, "minute");
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} hr ago`;
+  if (hours < 24) return relative.format(-hours, "hour");
   const days = Math.round(hours / 24);
-  if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
+  if (days < 7) return relative.format(-days, "day");
   return formatDate(value);
 }
 
@@ -77,9 +80,10 @@ export function formatDayLabel(value: string): string {
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
-  if (date.toDateString() === today.toDateString()) return "Today";
-  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
-  return date.toLocaleDateString("en-RW", { weekday: "short", month: "short", day: "numeric" });
+  const relative = new Intl.RelativeTimeFormat(formatLocale, { numeric: "auto" });
+  if (date.toDateString() === today.toDateString()) return relative.format(0, "day");
+  if (date.toDateString() === yesterday.toDateString()) return relative.format(-1, "day");
+  return date.toLocaleDateString(formatLocale, { weekday: "short", month: "short", day: "numeric" });
 }
 
 export function initials(name: string | null | undefined): string {

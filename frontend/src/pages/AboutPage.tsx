@@ -15,7 +15,7 @@ export function AboutPage() {
               <PageHeader
                 eyebrow="About ISOKOLINK RWANDA"
                 title="Making Rwanda's food market visible, fair, and connected."
-                subtitle="We bring buyers and food sellers closer together with verified listings, transparent market prices, and direct communication."
+                subtitle="We bring buyers and food sellers closer together with reviewed listings, transparent market prices, and direct communication."
               />
               <div className="flex flex-wrap gap-2">
                 <Link to="/products" className="btn-primary">Explore the marketplace</Link>
@@ -110,7 +110,7 @@ export function AboutPage() {
                 Whether you grow, sell, or buy food, there is a place for you.
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/70">
-                Create a buyer account in seconds. Register as a seller when you are ready to publish verified listings.
+                Create a buyer account in seconds. Register as a seller when you are ready to publish listings for review.
               </p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row md:justify-end">

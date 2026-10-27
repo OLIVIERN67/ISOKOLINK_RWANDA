@@ -7,9 +7,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { isLanguage } from "../i18n";
 import { authApi, getApiError } from "../services/api";
 import type { AuthUser } from "../types";
 import { subscribeToAuthChanges } from "../utils/authEvents";
+import { useI18n } from "./I18nContext";
 
 interface RegisterPayload {
   fullName: string;
@@ -39,8 +41,15 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { language, setLanguage } = useI18n();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user && isLanguage(user.preferredLanguage) && user.preferredLanguage !== language) {
+      setLanguage(user.preferredLanguage);
+    }
+  }, [user, language, setLanguage]);
 
   const refresh = useCallback(async () => {
     try {

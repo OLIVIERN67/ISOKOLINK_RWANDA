@@ -7,15 +7,7 @@ import { PageHeader } from "../../components/ui/PageHeader";
 import { Badge } from "../../components/ui/Badge";
 import { EmptyState, ErrorState, LoadingBlock } from "../../components/ui/States";
 import { formatDateTime, REPORT_STATUS_LABELS } from "../../utils/format";
-
-const reasonLabels: Record<string, string> = {
-  scam: "Suspected scam",
-  misleading: "Misleading listing",
-  prohibited: "Prohibited product",
-  harassment: "Harassment or abuse",
-  spam: "Spam",
-  other: "Other",
-};
+import { reportReasonLabel } from "../../utils/reports";
 
 function statusTone(status: ReportItem["status"]): "green" | "gold" | "red" | "gray" {
   if (status === "resolved") return "green";
@@ -62,7 +54,7 @@ export function BuyerReportsPage() {
       ) : reports.length === 0 ? (
         <EmptyState
           title="No reports submitted"
-          description="If a listing looks misleading or unsafe, use the Report button on the product page."
+          description="If a listing or seller looks misleading or unsafe, use the Report button on the product or seller page."
           icon={<Flag className="h-6 w-6" aria-hidden />}
           action={<Link to="/dashboard/browse" className="btn-primary">Browse products</Link>}
         />
@@ -76,7 +68,7 @@ export function BuyerReportsPage() {
                     <Inbox className="h-4 w-4" aria-hidden />
                   </span>
                   <div>
-                    <h2 className="text-sm font-semibold">{reasonLabels[report.reason] ?? report.reason}</h2>
+                    <h2 className="text-sm font-semibold">{reportReasonLabel(report.reason)}</h2>
                     <p className="mt-0.5 text-xs text-charcoal/50">
                       {report.product ? (
                         <>
@@ -86,7 +78,12 @@ export function BuyerReportsPage() {
                           </Link>
                         </>
                       ) : report.reportedUser ? (
-                        `About ${report.reportedUser.name}`
+                        <>
+                          About{" "}
+                          <Link to={`/sellers/${report.reportedUser.id}`} className="font-semibold text-forest-700 hover:underline">
+                            {report.reportedUser.name}
+                          </Link>
+                        </>
                       ) : (
                         "Marketplace report"
                       )}

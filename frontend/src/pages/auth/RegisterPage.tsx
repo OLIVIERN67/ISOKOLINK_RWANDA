@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,39 +12,42 @@ import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { Field } from "../../components/ui/Field";
 import { useDocumentTitle } from "../../components/ScrollToTop";
+import { useI18n } from "../../context/I18nContext";
 
-const passwordRules = z
-  .string()
-  .min(8, "Password must be at least 8 characters.")
-  .regex(/[a-z]/, "Include a lowercase letter.")
-  .regex(/[A-Z]/, "Include an uppercase letter.")
-  .regex(/[0-9]/, "Include a number.");
+function createSchema(t: (key: string) => string) {
+  return z
+    .object({
+      fullName: z.string().trim().min(2, t("validation.fullName")).max(150),
+      email: z.string().trim().email(t("validation.invalidEmail")),
+      phone: z
+        .string()
+        .trim()
+        .max(30)
+        .regex(/^[0-9+\-\s()]*$/, t("validation.invalidPhone"))
+        .optional(),
+      preferredLanguage: z.enum(["en", "rw", "fr"]),
+      password: z
+        .string()
+        .min(8, t("validation.passwordMin"))
+        .regex(/[a-z]/, t("validation.lowercase"))
+        .regex(/[A-Z]/, t("validation.uppercase"))
+        .regex(/[0-9]/, t("validation.number")),
+      confirmPassword: z.string(),
+      acceptTerms: z.literal(true, {
+        errorMap: () => ({ message: t("validation.acceptTerms") }),
+      }),
+    })
+    .refine((values) => values.password === values.confirmPassword, {
+      message: t("validation.passwordsMismatch"),
+      path: ["confirmPassword"],
+    });
+}
 
-const schema = z
-  .object({
-    fullName: z.string().trim().min(2, "Enter your full name.").max(150),
-    email: z.string().trim().email("Enter a valid email address."),
-    phone: z
-      .string()
-      .trim()
-      .max(30)
-      .regex(/^[0-9+\-\s()]*$/, "Enter a valid phone number.")
-      .optional(),
-    preferredLanguage: z.enum(["en", "rw", "fr"]),
-    password: passwordRules,
-    confirmPassword: z.string(),
-    acceptTerms: z.literal(true, {
-      errorMap: () => ({ message: "You must accept the terms and privacy policy." }),
-    }),
-  })
-  .refine((values) => values.password === values.confirmPassword, {
-    message: "Passwords do not match.",
-    path: ["confirmPassword"],
-  });
-
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof createSchema>>;
 
 export function RegisterPage() {
+  const { t } = useI18n();
+  const schema = useMemo(() => createSchema(t), [t]);
   useDocumentTitle("Create an account");
   const { register: registerUser } = useAuth();
   const { success } = useToast();

@@ -120,7 +120,12 @@ export async function getPublicProduct(id: number, viewerId?: number) {
   const row = await findProductRowById(id);
   if (!row) throw ApiError.notFound("Product not found.");
   const isOwner = viewerId !== undefined && Number(row.seller_id) === viewerId;
-  const isPublic = row.approval_status === "approved" && !row.is_archived;
+  const isPublic =
+    row.approval_status === "approved" &&
+    !row.is_archived &&
+    row.availability === "available" &&
+    row.seller_account_status === "active" &&
+    (row.seller_status === null || row.seller_status === "active");
   if (!isPublic && !isOwner) {
     throw ApiError.notFound("Product not found.");
   }
