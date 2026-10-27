@@ -17,7 +17,6 @@ type FormValues = z.infer<typeof schema>;
 export function ForgotPasswordPage() {
   useDocumentTitle("Forgot password");
   const [sent, setSent] = useState(false);
-  const [devToken, setDevToken] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -29,9 +28,8 @@ export function ForgotPasswordPage() {
   async function onSubmit(values: FormValues) {
     setServerError(null);
     try {
-      const result = await authApi.forgotPassword(values.email);
+      await authApi.forgotPassword(values.email);
       setSent(true);
-      setDevToken(result.devResetToken ?? null);
     } catch (error) {
       setServerError(getApiError(error).message);
     }
@@ -53,14 +51,6 @@ export function ForgotPasswordPage() {
           <Alert tone="success" title="Check your email">
             If an account exists for that address, a password reset link has been sent. The link expires soon.
           </Alert>
-          {devToken ? (
-            <div className="rounded-xl border border-dashed border-forest-200 bg-white/70 p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-charcoal/45">Development mode</p>
-              <Link to={`/reset-password?token=${encodeURIComponent(devToken)}`} className="mt-2 inline-block text-sm font-semibold text-forest-700 hover:underline">
-                Open the reset link
-              </Link>
-            </div>
-          ) : null}
           <Button type="button" variant="outline" className="w-full" onClick={() => setSent(false)}>
             Use a different email
           </Button>

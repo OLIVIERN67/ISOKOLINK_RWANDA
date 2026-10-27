@@ -6,6 +6,7 @@ export interface AuthUser {
   status: "active" | "suspended" | "deactivated";
   isEmailVerified: boolean;
   preferredLanguage: string;
+  activeMode: "buyer" | "seller";
   notificationEmailEnabled: boolean;
   roles: string[];
   sellerProfileId: number | null;

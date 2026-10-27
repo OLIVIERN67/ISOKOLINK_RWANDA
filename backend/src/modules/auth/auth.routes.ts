@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { requireAuth } from "../../middleware/auth";
+import { requireAuth, requireSessionAuth } from "../../middleware/auth";
 import { asyncHandler } from "../../utils/asyncHandler";
 import {
   authLimiter,
@@ -27,6 +27,7 @@ import {
   registerSchema,
   resetPasswordSchema,
   verifyEmailSchema,
+  resendVerificationSchema,
 } from "./auth.schemas";
 
 const router = Router();
@@ -34,9 +35,9 @@ const router = Router();
 router.post("/register", registrationLimiter, validate(registerSchema), asyncHandler(register));
 router.post("/login", authLimiter, validate(loginSchema), asyncHandler(login));
 router.post("/logout", asyncHandler(logout));
-router.get("/me", requireAuth, asyncHandler(me));
+router.get("/me", requireSessionAuth, asyncHandler(me));
 router.post("/verify-email", authLimiter, validate(verifyEmailSchema), asyncHandler(verifyEmail));
-router.post("/resend-verification", requireAuth, passwordResetLimiter, asyncHandler(resendVerification));
+router.post("/resend-verification", passwordResetLimiter, validate(resendVerificationSchema), asyncHandler(resendVerification));
 router.post(
   "/forgot-password",
   passwordResetLimiter,

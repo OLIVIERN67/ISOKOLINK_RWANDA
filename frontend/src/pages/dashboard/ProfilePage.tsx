@@ -34,13 +34,12 @@ type FormValues = z.infer<typeof schema>;
 
 export function ProfilePage() {
   useDocumentTitle("My profile");
-  const { refresh } = useAuth();
+  const { user, refresh } = useAuth();
   const { success, error } = useToast();
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
-  const [devToken, setDevToken] = useState<string | null>(null);
 
   const {
     register,
@@ -102,9 +101,8 @@ export function ProfilePage() {
   async function resendVerification() {
     setResending(true);
     try {
-      const result = await authApi.resendVerification();
+      const result = await authApi.resendVerification(user?.email ?? "");
       success(result.message);
-      setDevToken(result.devVerificationToken ?? null);
     } catch (requestError) {
       error(getApiError(requestError).message);
     } finally {
@@ -284,11 +282,9 @@ export function ProfilePage() {
                   <MailCheck className="h-4 w-4" aria-hidden />
                   Resend verification
                 </Button>
-                {devToken ? (
-                  <Link to={`/verify-email?token=${encodeURIComponent(devToken)}`} className="mt-2 block text-center text-xs font-semibold text-forest-700 hover:underline">
-                    Verify now (development)
-                  </Link>
-                ) : null}
+                <Link to={`/verify-email?email=${encodeURIComponent(user?.email ?? profile.email)}`} className="mt-2 block text-center text-xs font-semibold text-forest-700 hover:underline">
+                  Open verification page
+                </Link>
               </div>
             ) : null}
           </section>

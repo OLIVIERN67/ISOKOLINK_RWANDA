@@ -100,6 +100,9 @@ const commonRw = {
   "role.buyer": "Umuguzi",
   "role.seller": "Umucuruzi",
   "role.admin": "Umuyobozi",
+  "registration.accountType": "Ubwoko bwa konti",
+  "registration.buyerDescription": "Reba ibicuruzwa, gereranya ibiciro kandi uvugane n’abacuruzi.",
+  "registration.sellerDescription": "Genzura amatangazo y’ibicuruzwa kandi uvugane n’abaguzi.",
   "dashboard.buyer.title": "Ahantu h'umuguzi",
   "dashboard.buyer.subtitle": "Shakisha ibiribwa, gereranya ibiciro, kandi uvugane n'abacuruzi.",
   "dashboard.seller.title": "Ahantu h'umucuruzi",
@@ -222,6 +225,13 @@ const commonRw = {
   "validation.number": "Shyiramo umubare.",
   "validation.fullName": "Andika amazina yawe yose.",
   "validation.acceptTerms": "Ugomba kwemera amabwiriza na politiki y'ibanga.",
+  "announcements.eyebrow": "Amakuru n'ibitangazo",
+  "announcements.title": "Amatangazo aheruka",
+  "announcements.subtitle": "Menya amakuru ya ISOKOLINK RWANDA n'impinduka ku isoko.",
+  "announcements.empty": "Nta matangazo arashyirwa hanze.",
+  "announcements.readMore": "Soma birambuye",
+  "announcements.backHome": "Subira ahabanza",
+  "announcements.notFound": "Itangazo ntiribashije kuboneka.",
 };
 
 export default commonRw;

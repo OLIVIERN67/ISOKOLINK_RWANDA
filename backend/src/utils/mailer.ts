@@ -11,7 +11,7 @@ function getTransporter(): Transporter | null {
     transporter = nodemailer.createTransport({
       host: env.smtp.host,
       port: env.smtp.port,
-      secure: env.smtp.port === 465,
+      secure: env.smtp.secure,
       auth: { user: env.smtp.user, pass: env.smtp.password },
     });
   }
@@ -34,7 +34,7 @@ export interface MailMessage {
 export async function sendMail(message: MailMessage): Promise<{ delivered: boolean; reason?: string }> {
   const client = getTransporter();
   if (!client) {
-    console.info(`[mailer] SMTP not configured — skipped email to ${message.to}: ${message.subject}`);
+    console.error("[mailer] SMTP is not configured; email was not sent.");
     return { delivered: false, reason: "SMTP is not configured" };
   }
   try {

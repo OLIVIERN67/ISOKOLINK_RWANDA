@@ -163,11 +163,10 @@ export function DashboardLayout({ variant }: { variant: Variant }) {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-lg p-1.5 text-gray-400 transition hover:bg-white hover:text-error"
-                aria-label={t("common.logout")}
-                title={t("common.logout")}
+                className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-error/20 px-2.5 text-xs font-semibold text-error transition hover:bg-error/5"
               >
                 <LogOut className="h-4 w-4" aria-hidden />
+                <span>{t("common.logout")}</span>
               </button>
             </div>
           </div>
@@ -225,6 +224,16 @@ export function DashboardLayout({ variant }: { variant: Variant }) {
               <Link to={variant === "admin" ? "/admin/profile" : variant === "seller" ? "/seller/profile" : "/dashboard/profile"} aria-label={t("nav.account")}>
                 <Avatar name={user.fullName} size="sm" />
               </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-error/25 px-2.5 text-xs font-semibold text-error transition hover:bg-error/5 sm:px-3"
+                aria-label={t("common.logout")}
+                title={t("common.logout")}
+              >
+                <LogOut className="h-4 w-4" aria-hidden />
+                <span className="hidden sm:inline">{t("common.logout")}</span>
+              </button>
             </div>
           </header>
 

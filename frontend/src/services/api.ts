@@ -100,6 +100,7 @@ export const authApi = {
     password: string;
     phone?: string;
     preferredLanguage?: string;
+    accountType: "buyer" | "seller";
     acceptTerms: true;
   }) =>
     unwrap(
@@ -107,18 +108,20 @@ export const authApi = {
         ApiEnvelope<{
           user: AuthUser;
           emailDelivered: boolean;
-          devVerificationToken?: string;
         }>
       >("/auth/register", payload),
     ),
   logout: async () => {
     await api.post("/auth/logout");
   },
-  verifyEmail: async (token: string) => unwrap(await api.post<ApiEnvelope<{ message: string }>>("/auth/verify-email", { token })),
-  resendVerification: async () =>
-    unwrap(await api.post<ApiEnvelope<{ message: string; devVerificationToken?: string }>>("/auth/resend-verification")),
+  verifyEmail: async (email: string, otp: string) =>
+    unwrap(await api.post<ApiEnvelope<{ message: string }>>("/auth/verify-email", { email, otp })),
+  verifyEmailLink: async (token: string) =>
+    unwrap(await api.post<ApiEnvelope<{ message: string }>>("/auth/verify-email", { token })),
+  resendVerification: async (email: string) =>
+    unwrap(await api.post<ApiEnvelope<{ message: string }>>("/auth/resend-verification", { email })),
   forgotPassword: async (email: string) =>
-    unwrap(await api.post<ApiEnvelope<{ message: string; devResetToken?: string }>>("/auth/forgot-password", { email })),
+    unwrap(await api.post<ApiEnvelope<{ message: string }>>("/auth/forgot-password", { email })),
   resetPassword: async (token: string, password: string) =>
     unwrap(await api.post<ApiEnvelope<{ message: string }>>("/auth/reset-password", { token, password })),
   changePassword: async (currentPassword: string, newPassword: string) =>
@@ -142,6 +145,8 @@ export const userApi = {
     unwrap(await api.delete<ApiEnvelope<{ saved: boolean }>>(`/users/me/saved-products/${productId}`)),
   becomeSeller: async (payload: Record<string, unknown>) =>
     unwrap(await api.post<ApiEnvelope<SellerProfile>>("/users/me/become-seller", payload)),
+  switchActiveMode: async (mode: "buyer" | "seller") =>
+    unwrap(await api.post<ApiEnvelope<{ mode: "buyer" | "seller" }>>("/users/me/active-mode", { mode })),
   sellerProfile: async () => unwrap(await api.get<ApiEnvelope<SellerProfile>>("/users/me/seller-profile")),
   updateSellerProfile: async (payload: Record<string, unknown>) =>
     unwrap(await api.patch<ApiEnvelope<SellerProfile>>("/users/me/seller-profile", payload)),
@@ -158,6 +163,8 @@ export const referenceApi = {
   units: async () => unwrap(await api.get<ApiEnvelope<Unit[]>>("/units")),
   announcements: async (audience?: "all" | "buyers" | "sellers") =>
     unwrap(await api.get<ApiEnvelope<Announcement[]>>("/announcements", { params: audience ? { audience } : {} })),
+  announcement: async (id: number) =>
+    unwrap(await api.get<ApiEnvelope<Announcement>>(`/announcements/${id}`)),
 };
 
 // ---------- Products ----------

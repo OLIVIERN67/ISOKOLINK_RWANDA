@@ -100,6 +100,9 @@ const commonFr = {
   "role.buyer": "Acheteur",
   "role.seller": "Vendeur",
   "role.admin": "Administrateur",
+  "registration.accountType": "Type de compte",
+  "registration.buyerDescription": "Parcourir les produits, comparer les prix et contacter les vendeurs.",
+  "registration.sellerDescription": "Gérer les annonces et échanger avec les acheteurs intéressés.",
   "dashboard.buyer.title": "Espace acheteur",
   "dashboard.buyer.subtitle": "Découvrez les aliments, comparez les prix et contactez les vendeurs.",
   "dashboard.seller.title": "Espace vendeur",
@@ -222,6 +225,13 @@ const commonFr = {
   "validation.number": "Ajoutez un chiffre.",
   "validation.fullName": "Saisissez votre nom complet.",
   "validation.acceptTerms": "Vous devez accepter les conditions et la politique de confidentialité.",
+  "announcements.eyebrow": "Actualités et informations",
+  "announcements.title": "Dernières annonces",
+  "announcements.subtitle": "Restez informé des nouvelles d'ISOKOLINK RWANDA et des mises à jour du marché.",
+  "announcements.empty": "Aucune annonce n'a encore été publiée.",
+  "announcements.readMore": "Lire la suite",
+  "announcements.backHome": "Retour à l'accueil",
+  "announcements.notFound": "Annonce introuvable.",
 };
 
 export default commonFr;

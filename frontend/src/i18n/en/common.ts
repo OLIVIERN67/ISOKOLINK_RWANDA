@@ -100,6 +100,9 @@ const commonEn = {
   "role.buyer": "Buyer",
   "role.seller": "Seller",
   "role.admin": "Administrator",
+  "registration.accountType": "Account type",
+  "registration.buyerDescription": "Browse products, compare prices, and contact sellers.",
+  "registration.sellerDescription": "Manage listings and connect with interested buyers.",
   "dashboard.buyer.title": "Buyer workspace",
   "dashboard.buyer.subtitle": "Discover food, compare prices, and connect with sellers.",
   "dashboard.seller.title": "Seller workspace",
@@ -222,6 +225,13 @@ const commonEn = {
   "validation.number": "Include a number.",
   "validation.fullName": "Enter your full name.",
   "validation.acceptTerms": "You must accept the terms and privacy policy.",
+  "announcements.eyebrow": "Updates & Information",
+  "announcements.title": "Latest announcements",
+  "announcements.subtitle": "Stay informed about ISOKOLINK RWANDA news and marketplace updates.",
+  "announcements.empty": "No announcements have been published yet.",
+  "announcements.readMore": "Read More",
+  "announcements.backHome": "Back to home",
+  "announcements.notFound": "Announcement not found.",
 };
 
 export default commonEn;

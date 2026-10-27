@@ -6,6 +6,7 @@ export interface AuthUser {
   status: "active" | "suspended" | "deactivated";
   isEmailVerified: boolean;
   preferredLanguage: string;
+  activeMode: "buyer" | "seller";
   notificationEmailEnabled: boolean;
   roles: string[];
   sellerProfileId: number | null;
@@ -277,6 +278,7 @@ export interface Conversation {
     senderName: string;
     senderBusinessName: string | null;
     body: string;
+    imageUrl: string | null;
     createdAt: string;
     isMine: boolean;
   }>;
@@ -312,6 +314,7 @@ export interface Announcement {
   id: number;
   title: string;
   body: string;
+  imageUrl: string | null;
   audience: "all" | "buyers" | "sellers";
   isPublished: boolean;
   publishedAt: string | null;

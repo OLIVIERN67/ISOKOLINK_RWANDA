@@ -86,6 +86,7 @@ export async function updateMyProfile(
     updates.push("full_name = ?");
     params.push(input.fullName);
   }
+
   if (input.phone !== undefined) {
     updates.push("phone = ?");
     params.push(input.phone || null);
@@ -102,6 +103,59 @@ export async function updateMyProfile(
   params.push(userId);
   await execute(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`, params);
   return getMyProfile(userId);
+}
+
+export async function switchActiveMode(userId: number, mode: "buyer" | "seller", ip?: string) {
+  const user = await queryOne<RowDataPacket>(
+    `SELECT u.email, u.full_name, u.phone, u.is_email_verified,
+            EXISTS (
+              SELECT 1 FROM user_roles ur
+              JOIN roles r ON r.id = ur.role_id
+              WHERE ur.user_id = u.id AND r.name = 'seller'
+            ) AS has_seller_role,
+            EXISTS (SELECT 1 FROM seller_profiles sp WHERE sp.user_id = u.id) AS has_seller_profile
+     FROM users u WHERE u.id = ?`,
+    [userId],
+  );
+  if (!user) throw ApiError.notFound("Account not found.");
+  if (!user.is_email_verified) throw ApiError.forbidden("Verify your email address before switching modes.");
+  if (mode === "seller" && (!user.has_seller_role || !user.has_seller_profile)) {
+    const sellerRole = await queryOne<RowDataPacket>("SELECT id FROM roles WHERE name = 'seller'");
+    if (!sellerRole) throw ApiError.internal("Seller role is not configured. Run the database seed.");
+    await withTransaction(async (connection) => {
+      await connection.execute("INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)", [
+        userId,
+        sellerRole.id,
+      ]);
+      if (!user.has_seller_profile) {
+        await connection.execute(
+          `INSERT INTO seller_profiles (user_id, business_name, description, contact_phone, contact_email)
+           VALUES (?, ?, ?, ?, ?)`,
+          [
+            userId,
+            user.full_name,
+            "Complete your seller profile before publishing products.",
+            user.phone || null,
+            user.email,
+          ],
+        );
+      }
+    });
+  } else if (mode === "buyer") {
+    const buyerRole = await queryOne<RowDataPacket>("SELECT id FROM roles WHERE name = 'buyer'");
+    if (!buyerRole) throw ApiError.internal("Buyer role is not configured. Run the database seed.");
+    await execute("INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)", [userId, buyerRole.id]);
+  }
+  await execute("UPDATE users SET active_mode = ? WHERE id = ?", [mode, userId]);
+  await writeAuditLog({
+    actorId: userId,
+    action: "user.mode_switched",
+    entityType: "user",
+    entityId: userId,
+    metadata: { mode },
+    ipAddress: ip,
+  });
+  return mode;
 }
 
 export async function becomeSeller(userId: number, emailVerified: boolean, input: SellerProfileInput, ip?: string) {
@@ -148,6 +202,7 @@ export async function becomeSeller(userId: number, emailVerified: boolean, input
       userId,
       sellerRole.id,
     ]);
+    await connection.execute("UPDATE users SET active_mode = 'seller' WHERE id = ?", [userId]);
     await connection.execute(
       `INSERT INTO notifications (user_id, type, title, body, link)
        VALUES (?, 'account', 'Seller account activated', 'You can now submit food listings for approval.', '/seller/products/new')`,

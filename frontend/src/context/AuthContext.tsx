@@ -19,6 +19,7 @@ interface RegisterPayload {
   password: string;
   phone?: string;
   preferredLanguage?: string;
+  accountType: "buyer" | "seller";
   acceptTerms: true;
 }
 
@@ -31,7 +32,6 @@ interface AuthContextValue {
   register: (payload: RegisterPayload) => Promise<{
     user: AuthUser;
     emailDelivered: boolean;
-    devVerificationToken?: string;
   }>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;

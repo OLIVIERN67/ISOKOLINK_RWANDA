@@ -40,15 +40,17 @@ const baseSchema = z.object({
   COOKIE_DOMAIN: z.string().optional(),
   COOKIE_SECURE: boolFromString(false),
   EMAIL_VERIFICATION_TTL_MINUTES: numberFromString(1440),
+  EMAIL_VERIFICATION_OTP_TTL_MINUTES: numberFromString(10),
   PASSWORD_RESET_TTL_MINUTES: numberFromString(30),
   UPLOAD_DIR: z.string().default("uploads"),
   MAX_UPLOAD_BYTES: numberFromString(5 * 1024 * 1024),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: numberFromString(587),
+  SMTP_SECURE: boolFromString(false),
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
   SMTP_FROM: z.string().optional(),
-  EXPOSE_DEV_TOKENS: boolFromString(true),
+  EMAIL_FROM: z.string().optional(),
 });
 
 const parsed = baseSchema.safeParse(process.env);
@@ -90,16 +92,17 @@ export const env = {
   cookieDomain: raw.COOKIE_DOMAIN || undefined,
   cookieSecure: isProduction ? true : raw.COOKIE_SECURE,
   emailVerificationTtlMinutes: raw.EMAIL_VERIFICATION_TTL_MINUTES,
+  emailVerificationOtpTtlMinutes: raw.EMAIL_VERIFICATION_OTP_TTL_MINUTES,
   passwordResetTtlMinutes: raw.PASSWORD_RESET_TTL_MINUTES,
   uploadDir: path.resolve(process.cwd(), raw.UPLOAD_DIR),
   maxUploadBytes: raw.MAX_UPLOAD_BYTES,
   smtp: {
     host: raw.SMTP_HOST || "",
     port: raw.SMTP_PORT,
+    secure: raw.SMTP_SECURE,
     user: raw.SMTP_USER || "",
     password: raw.SMTP_PASSWORD || "",
-    from: raw.SMTP_FROM || "",
+    from: raw.SMTP_FROM || raw.EMAIL_FROM || "",
   },
-  exposeDevTokens: isProduction ? false : raw.EXPOSE_DEV_TOKENS,
   sessionCookieName: "isokolink_sid",
 };

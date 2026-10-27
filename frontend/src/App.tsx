@@ -28,6 +28,7 @@ const ContactPage = lazyNamed(() => import("./pages/ContactPage"), "ContactPage"
 const FaqPage = lazyNamed(() => import("./pages/FaqPage"), "FaqPage");
 const PrivacyPage = lazyNamed(() => import("./pages/PrivacyPage"), "PrivacyPage");
 const TermsPage = lazyNamed(() => import("./pages/TermsPage"), "TermsPage");
+const AnnouncementPage = lazyNamed(() => import("./pages/AnnouncementPage"), "AnnouncementPage");
 const NotAuthorizedPage = lazyNamed(() => import("./pages/NotAuthorizedPage"), "NotAuthorizedPage");
 const NotFoundPage = lazyNamed(() => import("./pages/NotFoundPage"), "NotFoundPage");
 const DashboardHomePage = lazyNamed(() => import("./pages/dashboard/DashboardHomePage"), "DashboardHomePage");
@@ -73,6 +74,7 @@ export function App() {
           <Route path="faq" element={<FaqPage />} />
           <Route path="privacy" element={<PrivacyPage />} />
           <Route path="terms" element={<TermsPage />} />
+          <Route path="announcements/:id" element={<AnnouncementPage />} />
           <Route path="not-authorized" element={<NotAuthorizedPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

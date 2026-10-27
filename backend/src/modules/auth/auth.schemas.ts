@@ -27,6 +27,7 @@ export const registerSchema = z.object({
     .optional()
     .or(z.literal("")),
   preferredLanguage: z.enum(["en", "rw", "fr"]).default("en"),
+  accountType: z.enum(["buyer", "seller"]).default("buyer"),
   acceptTerms: z.literal(true, {
     errorMap: () => ({ message: "You must accept the terms and privacy policy." }),
   }),
@@ -44,9 +45,17 @@ export const resetPasswordSchema = z.object({
   password: passwordSchema,
 });
 
-export const verifyEmailSchema = z.object({
-  token: z.string().min(10, "Verification token is required."),
-});
+export const verifyEmailSchema = z.union([
+  z.object({
+    email: emailSchema,
+    otp: z.string().regex(/^\d{6}$/, "Enter the 6-digit verification code."),
+  }),
+  z.object({
+    token: z.string().min(10, "Verification token is required."),
+  }),
+]);
+
+export const resendVerificationSchema = z.object({ email: emailSchema });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

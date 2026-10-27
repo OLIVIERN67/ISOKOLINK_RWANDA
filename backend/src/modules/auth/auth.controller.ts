@@ -1,5 +1,4 @@
 import type { Request, Response } from "express";
-import { env } from "../../config/env";
 import {
   createSession,
   clearSessionCookie,
@@ -13,11 +12,12 @@ import { created, ok } from "../../utils/http";
 import {
   authenticate,
   changePassword,
-  createVerificationTokenFor,
   markLogin,
   registerUser,
+  resendVerificationByEmail,
   requestPasswordReset,
   resetPassword,
+  verifyEmailOtp,
   verifyEmailToken,
 } from "./auth.service";
 
@@ -30,7 +30,6 @@ export async function register(req: Request, res: Response) {
     user: session?.user,
     message: "Account created. Check your email to verify your address.",
     emailDelivered: result.emailDelivered,
-    ...(result.devVerificationToken ? { devVerificationToken: result.devVerificationToken } : {}),
   });
 }
 
@@ -66,24 +65,25 @@ export async function me(req: Request, res: Response) {
 }
 
 export async function verifyEmail(req: Request, res: Response) {
-  await verifyEmailToken(String(req.body.token), req.ip);
+  if ("otp" in req.body) {
+    await verifyEmailOtp(String(req.body.email), String(req.body.otp), req.ip);
+  } else {
+    await verifyEmailToken(String(req.body.token), req.ip);
+  }
   return ok(res, { message: "Your email address has been verified." });
 }
 
 export async function resendVerification(req: Request, res: Response) {
-  if (!req.user) throw ApiError.unauthorized();
-  const token = await createVerificationTokenFor(req.user.id);
+  await resendVerificationByEmail(String(req.body.email));
   return ok(res, {
-    message: "A new verification email has been sent.",
-    ...(env.exposeDevTokens ? { devVerificationToken: token } : {}),
+    message: "If the account exists and is not verified, a new verification email has been sent.",
   });
 }
 
 export async function forgotPassword(req: Request, res: Response) {
-  const token = await requestPasswordReset(String(req.body.email));
+  await requestPasswordReset(String(req.body.email));
   return ok(res, {
     message: "If an account exists for that email address, a reset link has been sent.",
-    ...(token ? { devResetToken: token } : {}),
   });
 }
 

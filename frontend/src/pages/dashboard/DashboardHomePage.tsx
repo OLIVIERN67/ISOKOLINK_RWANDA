@@ -37,7 +37,6 @@ export function DashboardHomePage() {
   const [recentNotifications, setRecentNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [resending, setResending] = useState(false);
-  const [devVerification, setDevVerification] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -70,9 +69,8 @@ export function DashboardHomePage() {
   async function resendVerification() {
     setResending(true);
     try {
-      const result = await authApi.resendVerification();
+      const result = await authApi.resendVerification(user?.email ?? "");
       success(result.message);
-      setDevVerification(result.devVerificationToken ?? null);
     } catch (requestError) {
       error(getApiError(requestError).message);
     } finally {
@@ -126,13 +124,7 @@ export function DashboardHomePage() {
               <Button type="button" size="sm" variant="outline" onClick={resendVerification} loading={resending}>
                 Resend verification
               </Button>
-              {devVerification ? (
-                <Link to={`/verify-email?token=${encodeURIComponent(devVerification)}`} className="btn-primary btn-sm">
-                  Verify now
-                </Link>
-              ) : (
-                <Link to="/verify-email" className="btn-outline btn-sm">Verification page</Link>
-              )}
+              <Link to={`/verify-email?email=${encodeURIComponent(user.email)}`} className="btn-outline btn-sm">Verification page</Link>
             </div>
           </div>
         </Alert>

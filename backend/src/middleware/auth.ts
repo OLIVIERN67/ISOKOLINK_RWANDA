@@ -19,7 +19,7 @@ export async function attachUser(req: Request, _res: Response, next: NextFunctio
   }
 }
 
-export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
+export function requireSessionAuth(req: Request, _res: Response, next: NextFunction): void {
   if (!req.user) {
     next(ApiError.unauthorized());
     return;
@@ -29,6 +29,20 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction): v
     return;
   }
   next();
+}
+
+export function requireAuth(req: Request, res: Response, next: NextFunction): void {
+  requireSessionAuth(req, res, (error?: unknown) => {
+    if (error) {
+      next(error);
+      return;
+    }
+    if (!req.user?.isEmailVerified) {
+      next(ApiError.forbidden("Please verify your email address before accessing this feature."));
+      return;
+    }
+    next();
+  });
 }
 
 export function hasRole(req: Request, role: string): boolean {
@@ -43,6 +57,10 @@ export function requireRole(...roles: string[]) {
     }
     if (req.user.status !== "active") {
       next(ApiError.forbidden("This account is not active."));
+      return;
+    }
+    if (!req.user.isEmailVerified) {
+      next(ApiError.forbidden("Please verify your email address before accessing this feature."));
       return;
     }
     if (!roles.some((role) => req.user?.roles.includes(role))) {

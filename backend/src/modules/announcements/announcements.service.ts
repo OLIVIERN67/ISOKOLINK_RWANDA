@@ -8,6 +8,7 @@ function mapAnnouncement(row: RowDataPacket) {
     id: Number(row.id),
     title: String(row.title),
     body: String(row.body),
+    imageUrl: row.image_url === null ? null : String(row.image_url),
     audience: String(row.audience),
     isPublished: Boolean(row.is_published),
     publishedAt: row.published_at === null ? null : String(row.published_at),
@@ -18,7 +19,7 @@ function mapAnnouncement(row: RowDataPacket) {
 }
 
 const SELECT = `
-  SELECT a.id, a.title, a.body, a.audience, a.is_published, a.published_at, a.created_at, a.updated_at,
+  SELECT a.id, a.title, a.body, a.image_url, a.audience, a.is_published, a.published_at, a.created_at, a.updated_at,
          a.created_by, u.full_name AS author_name
   FROM announcements a
   LEFT JOIN users u ON u.id = a.created_by
@@ -31,6 +32,7 @@ export async function listPublishedAnnouncements(audience?: "all" | "buyers" | "
     audienceSql = "AND (a.audience = 'all' OR a.audience = ?)";
     params.push(audience);
   }
+
   const rows = await query<RowDataPacket[]>(
     `${SELECT} WHERE a.is_published = 1 AND a.published_at <= UTC_TIMESTAMP() ${audienceSql}
      ORDER BY a.published_at DESC LIMIT 20`,
@@ -39,21 +41,30 @@ export async function listPublishedAnnouncements(audience?: "all" | "buyers" | "
   return rows.map(mapAnnouncement);
 }
 
+export async function getPublishedAnnouncement(id: number) {
+  const row = await queryOne<RowDataPacket>(
+    `${SELECT} WHERE a.id = ? AND a.is_published = 1 AND a.published_at <= UTC_TIMESTAMP()`,
+    [id],
+  );
+  if (!row) throw ApiError.notFound("Announcement not found.");
+  return mapAnnouncement(row);
+}
+
 export async function listAllAnnouncements() {
   const rows = await query<RowDataPacket[]>(`${SELECT} ORDER BY a.created_at DESC LIMIT 100`);
   return rows.map(mapAnnouncement);
 }
 
 export async function createAnnouncement(
-  input: { title: string; body: string; audience: "all" | "buyers" | "sellers"; isPublished?: boolean },
+  input: { title: string; body: string; imageUrl?: string | null; audience: "all" | "buyers" | "sellers"; isPublished?: boolean },
   adminId: number,
   ip?: string,
 ) {
   const publishedAt = input.isPublished ? new Date().toISOString().slice(0, 19).replace("T", " ") : null;
   const result = await execute(
-    `INSERT INTO announcements (title, body, audience, is_published, published_at, created_by)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [input.title, input.body, input.audience, input.isPublished ? 1 : 0, publishedAt, adminId],
+    `INSERT INTO announcements (title, body, image_url, audience, is_published, published_at, created_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [input.title, input.body, input.imageUrl || null, input.audience, input.isPublished ? 1 : 0, publishedAt, adminId],
   );
   await writeAuditLog({
     actorId: adminId,
@@ -73,6 +84,7 @@ export async function updateAnnouncement(
   input: {
     title?: string;
     body?: string;
+    imageUrl?: string | null;
     audience?: "all" | "buyers" | "sellers";
     isPublished?: boolean;
   },
@@ -94,6 +106,10 @@ export async function updateAnnouncement(
   if (input.body !== undefined) {
     updates.push("body = ?");
     params.push(input.body);
+  }
+  if (input.imageUrl !== undefined) {
+    updates.push("image_url = ?");
+    params.push(input.imageUrl || null);
   }
   if (input.audience !== undefined) {
     updates.push("audience = ?");

@@ -16,6 +16,7 @@ import {
   getSavedProducts,
   getSellerProfile,
   saveProduct,
+  switchActiveMode,
   unsaveProduct,
   updateMyProfile,
   updateSellerProfile,
@@ -40,6 +41,16 @@ usersRouter.patch(
   "/me",
   validate(updateProfileSchema),
   asyncHandler(async (req, res) => ok(res, await updateMyProfile(req.user!.id, req.body))),
+);
+
+usersRouter.post(
+  "/me/active-mode",
+  writeLimiter,
+  validate(z.object({ mode: z.enum(["buyer", "seller"]) })),
+  asyncHandler(async (req, res) => {
+    const mode = await switchActiveMode(req.user!.id, req.body.mode, req.ip);
+    return ok(res, { mode });
+  }),
 );
 
 usersRouter.get(

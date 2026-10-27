@@ -33,15 +33,17 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<{ message: string; needsVerification: boolean } | null>(null);
 
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { email: "", password: "" } });
+  const emailValue = watch("email");
 
   const from = (location.state as { from?: string } | null)?.from;
 
@@ -52,7 +54,7 @@ export function LoginPage() {
       success(`Welcome back, ${user.fullName.split(" ")[0]}.`);
       const destination =
         from ||
-        (user.roles.includes("admin") ? "/admin" : user.roles.includes("seller") ? "/seller" : "/dashboard");
+        (user.roles.includes("admin") ? "/admin" : user.activeMode === "seller" ? "/seller" : "/dashboard");
       navigate(destination, { replace: true });
     } catch (error) {
       const parsed = getApiError(error);
@@ -63,7 +65,7 @@ export function LoginPage() {
           }
         });
       }
-      setServerError(parsed.message);
+      setServerError({ message: parsed.message, needsVerification: parsed.code === "FORBIDDEN" });
     }
   }
 
@@ -83,7 +85,16 @@ export function LoginPage() {
       }
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-        {serverError ? <Alert tone="error">{serverError}</Alert> : null}
+        {serverError ? (
+          <>
+            <Alert tone="error">{serverError.message}</Alert>
+            {serverError.needsVerification ? (
+              <Link to={`/verify-email?email=${encodeURIComponent(emailValue)}`} className="text-sm font-semibold text-forest-700 hover:underline">
+                Resend verification email
+              </Link>
+            ) : null}
+          </>
+        ) : null}
 
         <Field label="Email address" htmlFor="email" error={errors.email?.message} required>
           <input

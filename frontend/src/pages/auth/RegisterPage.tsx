@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, MailCheck, UserPlus } from "lucide-react";
+import { Eye, EyeOff, MailCheck, ShoppingBasket, Store, UserPlus } from "lucide-react";
 import { getApiError } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -26,6 +26,7 @@ function createSchema(t: (key: string) => string) {
         .regex(/^[0-9+\-\s()]*$/, t("validation.invalidPhone"))
         .optional(),
       preferredLanguage: z.enum(["en", "rw", "fr"]),
+      accountType: z.enum(["buyer", "seller"]),
       password: z
         .string()
         .min(8, t("validation.passwordMin"))
@@ -51,10 +52,9 @@ export function RegisterPage() {
   useDocumentTitle("Create an account");
   const { register: registerUser } = useAuth();
   const { success } = useToast();
-  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
-  const [created, setCreated] = useState<{ email: string; devToken?: string; delivered: boolean } | null>(null);
+  const [created, setCreated] = useState<{ email: string; delivered: boolean; accountType: "buyer" | "seller" } | null>(null);
 
   const {
     register,
@@ -68,6 +68,7 @@ export function RegisterPage() {
       email: "",
       phone: "",
       preferredLanguage: "en",
+      accountType: "buyer",
       password: "",
       confirmPassword: "",
       acceptTerms: false as true,
@@ -83,13 +84,14 @@ export function RegisterPage() {
         password: values.password,
         phone: values.phone || undefined,
         preferredLanguage: values.preferredLanguage,
+        accountType: values.accountType,
         acceptTerms: true,
       });
       success("Account created.");
       setCreated({
         email: values.email,
-        devToken: result.devVerificationToken,
         delivered: result.emailDelivered,
+        accountType: values.accountType,
       });
     } catch (error) {
       const parsed = getApiError(error);
@@ -106,7 +108,7 @@ export function RegisterPage() {
     return (
       <AuthCard
         title="Check your email"
-        subtitle={`We created your account for ${created.email}. Verify your address to unlock seller features.`}
+        subtitle={`We created your ${created.accountType} account for ${created.email}. Verify your address to continue.`}
         footer={
           <>
             Already verified? <Link to="/login" className="font-semibold text-forest-700 hover:underline">Sign in</Link>
@@ -117,28 +119,18 @@ export function RegisterPage() {
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-forest-50 text-forest-600">
             <MailCheck className="h-7 w-7" aria-hidden />
           </span>
-          {created.delivered ? (
-            <p className="text-sm leading-6 text-charcoal/70">
-              A verification link has been sent to your inbox. The link expires soon, so use it promptly.
-            </p>
-          ) : (
-            <Alert tone="warning" title="Email delivery is not configured">
-              The development server could not send email. Use the verification link below or the resend button on the
-              verification page.
-            </Alert>
-          )}
-          {created.devToken ? (
-            <Link to={`/verify-email?token=${encodeURIComponent(created.devToken)}`} className="btn-primary w-full">
-              Verify my email now
-            </Link>
-          ) : (
-            <Link to="/verify-email" className="btn-primary w-full">Open verification page</Link>
-          )}
-          <Button type="button" variant="outline" className="w-full" onClick={() => navigate("/dashboard")}>
-            Continue to dashboard
-          </Button>
+          <p className="text-sm leading-6 text-charcoal/70">
+            {created.delivered
+              ? "A 6-digit verification code has been sent to your inbox. Enter it promptly to activate your account."
+              : "We could not confirm email delivery. Please use the verification page to request a new email."}
+          </p>
+          <Link to={`/verify-email?email=${encodeURIComponent(created.email)}`} className="btn-primary w-full">
+            Open verification page
+          </Link>
           <p className="text-xs leading-5 text-charcoal/45">
-            You can browse products and compare prices before verifying. Seller registration requires a verified email.
+            {created.accountType === "seller"
+              ? "After verification, you will be taken to your seller workspace to manage products and your business profile."
+              : "After verification, you will be taken to your buyer workspace to browse products and compare prices."}
           </p>
         </div>
       </AuthCard>
@@ -157,6 +149,29 @@ export function RegisterPage() {
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         {serverError ? <Alert tone="error">{serverError}</Alert> : null}
+
+        <Field label={t("registration.accountType")} htmlFor="accountType" error={errors.accountType?.message} required>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {([
+              { value: "buyer", label: t("role.buyer"), description: t("registration.buyerDescription"), icon: ShoppingBasket },
+              { value: "seller", label: t("role.seller"), description: t("registration.sellerDescription"), icon: Store },
+            ] as const).map((option) => {
+              const Icon = option.icon;
+              return (
+                <label key={option.value} className="cursor-pointer">
+                  <input type="radio" value={option.value} className="peer sr-only" {...register("accountType")} />
+                  <span className="flex min-h-[92px] items-start gap-3 rounded-xl border border-forest-100 bg-white p-3 transition peer-checked:border-forest-600 peer-checked:bg-forest-50 peer-focus-visible:ring-2 peer-focus-visible:ring-forest-500">
+                    <Icon className="mt-0.5 h-5 w-5 shrink-0 text-forest-700" aria-hidden />
+                    <span>
+                      <span className="block text-sm font-bold text-charcoal">{option.label}</span>
+                      <span className="mt-1 block text-xs leading-5 text-charcoal/60">{option.description}</span>
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </Field>
 
         <Field label="Full name" htmlFor="fullName" error={errors.fullName?.message} required>
           <input id="fullName" className="input" autoComplete="name" placeholder="Your full name" {...register("fullName")} />

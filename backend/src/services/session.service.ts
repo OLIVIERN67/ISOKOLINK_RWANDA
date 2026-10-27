@@ -13,6 +13,7 @@ interface SessionUserRow extends RowDataPacket {
   status: AuthUser["status"];
   is_email_verified: number;
   preferred_language: string;
+  active_mode: "buyer" | "seller";
   notification_email_enabled: number;
   created_at: string;
   roles: string | null;
@@ -30,6 +31,7 @@ function mapSessionUser(row: SessionUserRow): AuthUser {
     status: row.status,
     isEmailVerified: Boolean(row.is_email_verified),
     preferredLanguage: row.preferred_language,
+    activeMode: row.active_mode,
     notificationEmailEnabled: Boolean(row.notification_email_enabled),
     roles: row.roles ? row.roles.split(",") : [],
     sellerProfileId: row.seller_profile_id === null ? null : Number(row.seller_profile_id),
@@ -85,7 +87,7 @@ export async function getSessionUser(token: string): Promise<{ user: AuthUser; s
   const tokenHash = sha256(token);
   const row = await queryOne<SessionUserRow>(
     `SELECT u.id, u.email, u.full_name, u.phone, u.status, u.is_email_verified,
-            u.preferred_language, u.notification_email_enabled, u.created_at,
+            u.preferred_language, u.active_mode, u.notification_email_enabled, u.created_at,
             GROUP_CONCAT(DISTINCT r.name ORDER BY r.name) AS roles,
             sp.id AS seller_profile_id, sp.business_name AS seller_business_name, sp.status AS seller_status
      FROM sessions s

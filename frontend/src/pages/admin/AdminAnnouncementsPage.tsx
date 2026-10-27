@@ -20,6 +20,7 @@ const schema = z.object({
   body: z.string().trim().min(10, "Write at least 10 characters.").max(10000),
   audience: z.enum(["all", "buyers", "sellers"]),
   isPublished: z.boolean(),
+  imageUrl: z.string().trim().max(500).optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -42,7 +43,7 @@ export function AdminAnnouncementsPage() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { title: "", body: "", audience: "all", isPublished: false },
+    defaultValues: { title: "", body: "", audience: "all", isPublished: false, imageUrl: "" },
   });
 
   function load() {
@@ -63,13 +64,13 @@ export function AdminAnnouncementsPage() {
 
   function openCreate() {
     setEditing(null);
-    reset({ title: "", body: "", audience: "all", isPublished: false });
+    reset({ title: "", body: "", audience: "all", isPublished: false, imageUrl: "" });
     setModalOpen(true);
   }
 
   function openEdit(item: Announcement) {
     setEditing(item);
-    reset({ title: item.title, body: item.body, audience: item.audience, isPublished: item.isPublished });
+    reset({ title: item.title, body: item.body, audience: item.audience, isPublished: item.isPublished, imageUrl: item.imageUrl ?? "" });
     setModalOpen(true);
   }
 
@@ -200,6 +201,9 @@ export function AdminAnnouncementsPage() {
           </Field>
           <Field label="Message" htmlFor="announcement-body" error={errors.body?.message} required>
             <Textarea id="announcement-body" rows={7} {...register("body")} />
+          </Field>
+          <Field label="Image URL (optional)" htmlFor="announcement-image" hint="Use an uploaded /uploads/... path or an HTTPS image URL." error={errors.imageUrl?.message}>
+            <Input id="announcement-image" {...register("imageUrl")} />
           </Field>
           <Field label="Audience" htmlFor="announcement-audience" error={errors.audience?.message}>
             <Select id="announcement-audience" {...register("audience")}>

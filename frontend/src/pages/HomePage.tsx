@@ -8,6 +8,7 @@ import {
   Clock3,
   MapPin,
   MessageCircle,
+  Megaphone,
   Search,
   ShieldCheck,
   Sprout,
@@ -15,8 +16,8 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { getApiError, priceApi, productApi } from "../services/api";
-import type { MarketObservation, PaginationMeta, Product } from "../types";
+import { getApiError, priceApi, productApi, referenceApi } from "../services/api";
+import type { Announcement, MarketObservation, PaginationMeta, Product } from "../types";
 import { useReferenceData } from "../hooks/useReferenceData";
 import { useDocumentTitle } from "../components/ScrollToTop";
 import { ProductCard, ProductGridSkeleton } from "../components/ProductCard";
@@ -24,15 +25,19 @@ import { CategoryIcon } from "../components/CategoryIcon";
 import { EmptyState, ErrorState } from "../components/ui/States";
 import { Badge } from "../components/ui/Badge";
 import { formatCurrency, formatRelative, freshnessTone } from "../utils/format";
+import { assetUrl, formatDate } from "../utils/format";
+import { useI18n } from "../context/I18nContext";
 
 export function HomePage() {
   useDocumentTitle("Fresh food marketplace for Rwanda");
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { categories, locations } = useReferenceData();
   const [featured, setFeatured] = useState<Product[]>([]);
   const [productsTotal, setProductsTotal] = useState<number | null>(null);
   const [observations, setObservations] = useState<MarketObservation[]>([]);
   const [observationsTotal, setObservationsTotal] = useState<number | null>(null);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingPrices, setLoadingPrices] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -40,13 +45,18 @@ export function HomePage() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([productApi.list({ sort: "featured", pageSize: 8 }), priceApi.list({ pageSize: 6, sort: "newest" })])
-      .then(([productResult, priceResult]) => {
+    Promise.all([
+      productApi.list({ sort: "featured", pageSize: 8 }),
+      priceApi.list({ pageSize: 6, sort: "newest" }),
+      referenceApi.announcements(),
+    ])
+      .then(([productResult, priceResult, announcementResult]) => {
         if (!active) return;
         setFeatured(productResult.items);
         setProductsTotal((productResult.meta as unknown as PaginationMeta).total);
         setObservations(priceResult.items);
         setObservationsTotal((priceResult.meta as unknown as PaginationMeta).total);
+        setAnnouncements(announcementResult);
         setLoadError(null);
       })
       .catch((error) => {
@@ -248,6 +258,40 @@ export function HomePage() {
             </div>
           )}
         </div>
+      </section>
+
+      <section className="container-page py-12">
+        <div className="mb-5 flex items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-forest-600">{t("announcements.eyebrow")}</p>
+            <h2 className="mt-1 font-display text-2xl font-bold">{t("announcements.title")}</h2>
+            <p className="mt-1 text-sm text-charcoal/55">{t("announcements.subtitle")}</p>
+          </div>
+        </div>
+        {announcements.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center text-sm text-charcoal/50">{t("announcements.empty")}</p>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-3">
+            {announcements.slice(0, 3).map((announcement) => {
+              const image = assetUrl(announcement.imageUrl);
+              return (
+                <article key={announcement.id} className="card overflow-hidden">
+                  {image ? <img src={image} alt="" className="aspect-[16/9] w-full object-cover" /> : (
+                    <div className="flex aspect-[16/9] items-center justify-center bg-forest-50 text-forest-600"><Megaphone className="h-8 w-8" aria-hidden /></div>
+                  )}
+                  <div className="p-5">
+                    <p className="text-xs text-charcoal/45">{formatDate(announcement.publishedAt)}</p>
+                    <h3 className="mt-2 line-clamp-2 text-base font-bold text-charcoal">{announcement.title}</h3>
+                    <p className="mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 text-charcoal/60">{announcement.body}</p>
+                    <Link to={`/announcements/${announcement.id}`} className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-forest-700 hover:underline">
+                      {t("announcements.readMore")} <ArrowRight className="h-4 w-4" aria-hidden />
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       <section className="container-page py-12">
