@@ -4,6 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import { env } from "./config/env";
+import { allowedOrigins } from "./config/origins";
 import { queryOne } from "./db/pool";
 import { attachUser } from "./middleware/auth";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
@@ -32,17 +33,6 @@ app.disable("x-powered-by");
 if (env.isProduction) {
   app.set("trust proxy", 1);
 }
-
-const allowedOrigins = new Set(
-  [env.frontendUrl, env.apiPublicUrl, "http://localhost:5173", "http://127.0.0.1:5173"]
-    .flatMap((url) => {
-      try {
-        return [new URL(url).origin];
-      } catch {
-        return [];
-      }
-    }),
-);
 
 app.use(
   helmet({

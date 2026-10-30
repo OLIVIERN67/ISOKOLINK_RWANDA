@@ -1,25 +1,13 @@
 import type { NextFunction, Request, Response } from "express";
-import { env } from "../config/env";
+import { allowedOrigins } from "../config/origins";
 import { ApiError } from "../utils/errors";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
-const allowedOrigins = new Set(
-  [env.frontendUrl, env.apiPublicUrl]
-    .flatMap((url) => {
-      try {
-        return [new URL(url).origin];
-      } catch {
-        return [];
-      }
-    })
-    .concat(["http://localhost:5173", "http://127.0.0.1:5173"]),
-);
-
 /**
- * Defence-in-depth CSRF protection for cookie-authenticated requests.
- * SameSite=Lax is the primary control; this rejects obvious cross-site
- * mutating requests and spoofed origins.
+ * Origin allow-list protection for cookie-authenticated requests. It rejects
+ * mutating requests from origins other than the configured frontend/API and
+ * blocks cross-site requests that omit an Origin header.
  */
 export function originCheck(req: Request, _res: Response, next: NextFunction): void {
   if (SAFE_METHODS.has(req.method)) {
@@ -42,5 +30,8 @@ export function originCheck(req: Request, _res: Response, next: NextFunction): v
     return;
   }
 
+  // Some same-origin requests or server-to-server calls may omit Origin.
+  // CORS already restricts browser origins; we only block when there is an
+  // explicit cross-site signal or a disallowed origin.
   next();
 }

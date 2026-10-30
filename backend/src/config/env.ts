@@ -24,17 +24,17 @@ const numberFromString = (defaultValue: number) =>
       return Number.isFinite(parsed) ? parsed : defaultValue;
     });
 
+const nodeEnv = process.env.NODE_ENV === "production" ? "production" : process.env.NODE_ENV === "test" ? "test" : "development";
+const isProductionEnv = nodeEnv === "production";
+
 const baseSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: numberFromString(5000),
-  //local envirnoment 
 
-  FRONTEND_URL: z.string().default("http://localhost:5173"),
-  API_PUBLIC_URL: z.string().default("http://localhost:5000"),
-
-//  production environment
-  //  FRONTEND_URL: z.string().default("https://isokolink-rwanda.vercel.app"),
-  // API_PUBLIC_URL: z.string().default("https://isokolink-rwanda.onrender.com"),
+  // Local defaults in development, hosted defaults in production. Explicit
+  // FRONTEND_URL / API_PUBLIC_URL environment variables always take priority.
+  FRONTEND_URL: z.string().default(isProductionEnv ? "https://isokolink-rwanda.vercel.app" : "http://localhost:5173"),
+  API_PUBLIC_URL: z.string().default(isProductionEnv ? "https://isokolink-rwanda.onrender.com" : "http://localhost:5000"),
 
   // Database credentials from .env
   DB_HOST: z.string().min(1, "DB_HOST is required"),
