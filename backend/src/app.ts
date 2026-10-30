@@ -34,7 +34,14 @@ if (env.isProduction) {
 }
 
 const allowedOrigins = new Set(
-  [env.frontendUrl, env.apiPublicUrl, "http://localhost:5173", "http://127.0.0.1:5173"].filter(Boolean),
+  [env.frontendUrl, env.apiPublicUrl, "http://localhost:5173", "http://127.0.0.1:5173"]
+    .flatMap((url) => {
+      try {
+        return [new URL(url).origin];
+      } catch {
+        return [];
+      }
+    }),
 );
 
 app.use(

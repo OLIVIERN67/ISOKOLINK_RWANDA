@@ -66,7 +66,7 @@ export function setSessionCookie(res: Response, token: string): void {
   res.cookie(env.sessionCookieName, token, {
     httpOnly: true,
     secure: env.cookieSecure,
-    sameSite: "lax",
+    sameSite: env.isProduction ? "none" : "lax",
     path: "/",
     maxAge: env.sessionTtlHours * 60 * 60 * 1000,
     domain: env.cookieDomain,
@@ -77,7 +77,7 @@ export function clearSessionCookie(res: Response): void {
   res.clearCookie(env.sessionCookieName, {
     httpOnly: true,
     secure: env.cookieSecure,
-    sameSite: "lax",
+    sameSite: env.isProduction ? "none" : "lax",
     path: "/",
     domain: env.cookieDomain,
   });

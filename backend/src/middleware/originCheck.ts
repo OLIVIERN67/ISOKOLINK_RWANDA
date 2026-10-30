@@ -28,8 +28,12 @@ export function originCheck(req: Request, _res: Response, next: NextFunction): v
   }
 
   const origin = req.get("origin");
-  if (origin && !allowedOrigins.has(origin)) {
-    next(ApiError.forbidden("Request origin is not allowed."));
+  if (origin) {
+    if (!allowedOrigins.has(origin)) {
+      next(ApiError.forbidden("Request origin is not allowed."));
+      return;
+    }
+    next();
     return;
   }
 

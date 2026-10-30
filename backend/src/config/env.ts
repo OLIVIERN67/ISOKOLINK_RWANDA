@@ -34,7 +34,7 @@ const baseSchema = z.object({
 
 //  production environment
    FRONTEND_URL: z.string().default("https://isokolink-rwanda.vercel.app"),
-  API_PUBLIC_URL: z.string().default(" https://isokolink-rwanda.onrender.com"),
+  API_PUBLIC_URL: z.string().default("https://isokolink-rwanda.onrender.com"),
 
   // Database credentials from .env
   DB_HOST: z.string().min(1, "DB_HOST is required"),
@@ -89,8 +89,8 @@ export const env = {
   isProduction,
   isTest: raw.NODE_ENV === "test",
   port: raw.PORT,
-  frontendUrl: raw.FRONTEND_URL.replace(/\/$/, ""),
-  apiPublicUrl: raw.API_PUBLIC_URL.replace(/\/$/, ""),
+  frontendUrl: raw.FRONTEND_URL.trim().replace(/\/$/, ""),
+  apiPublicUrl: raw.API_PUBLIC_URL.trim().replace(/\/$/, ""),
   db: {
     host: raw.DB_HOST,
     port: raw.DB_PORT,
