@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { currentLanguage, translateCurrent } from "../i18n";
+import { resolveApiBaseUrl } from "../utils/apiBase";
 import type {
   AdminStats,
   AdminUserDetail,
@@ -36,12 +37,6 @@ export interface ApiErrorShape {
   message: string;
   code?: string;
   details?: Array<{ field: string; message: string }>;
-}
-
-function resolveApiBaseUrl(value: string | undefined): string {
-  const configured = value?.trim().replace(/\/+$/, "");
-  if (!configured) return "/api";
-  return configured.endsWith("/api") ? configured : `${configured}/api`;
 }
 
 export const api = axios.create({

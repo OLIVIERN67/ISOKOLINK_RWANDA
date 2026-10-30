@@ -29,12 +29,12 @@ const baseSchema = z.object({
   PORT: numberFromString(5000),
   //local envirnoment 
 
-  // FRONTEND_URL: z.string().default("http://localhost:5173"),
-  // API_PUBLIC_URL: z.string().default("http://localhost:5000"),
+  FRONTEND_URL: z.string().default("http://localhost:5173"),
+  API_PUBLIC_URL: z.string().default("http://localhost:5000"),
 
 //  production environment
-   FRONTEND_URL: z.string().default("https://isokolink-rwanda.vercel.app"),
-  API_PUBLIC_URL: z.string().default("https://isokolink-rwanda.onrender.com"),
+  //  FRONTEND_URL: z.string().default("https://isokolink-rwanda.vercel.app"),
+  // API_PUBLIC_URL: z.string().default("https://isokolink-rwanda.onrender.com"),
 
   // Database credentials from .env
   DB_HOST: z.string().min(1, "DB_HOST is required"),

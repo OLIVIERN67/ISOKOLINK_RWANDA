@@ -196,7 +196,9 @@ parameters and role requirements.
 
 - Passwords are hashed with bcrypt (12 rounds).
 - Session tokens are random 32-byte values; only their SHA-256 hash is stored.
-- The session cookie is httpOnly, SameSite=Lax, and `Secure` in production.
+- The session cookie is httpOnly and `Secure` in production, with SameSite=Lax
+  locally and SameSite=None in production so the separately hosted frontend can
+  authenticate against the API.
 - Verification and reset tokens are single-use, expiring, and stored hashed.
 - Login, registration and password-reset endpoints are rate limited.
 - Requests with an untrusted `Origin` are rejected server-side.

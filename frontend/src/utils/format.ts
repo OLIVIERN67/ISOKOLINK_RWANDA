@@ -1,3 +1,5 @@
+import { resolveAssetUrl } from "./apiBase";
+
 let formatLocale = "en-RW";
 
 export function setFormatLocale(locale: string): void {
@@ -95,10 +97,7 @@ export function initials(name: string | null | undefined): string {
 }
 
 export function assetUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
-  if (/^https?:\/\//i.test(url) || url.startsWith("data:")) return url;
-  if (url.startsWith("/")) return url;
-  return `/uploads/${url}`;
+  return resolveAssetUrl(url);
 }
 
 export const APPROVAL_LABELS: Record<string, string> = {
