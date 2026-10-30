@@ -27,8 +27,14 @@ const numberFromString = (defaultValue: number) =>
 const baseSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: numberFromString(5000),
-  FRONTEND_URL: z.string().default("http://localhost:5173"),
-  API_PUBLIC_URL: z.string().default("http://localhost:5000"),
+  //local envirnoment 
+
+  // FRONTEND_URL: z.string().default("http://localhost:5173"),
+  // API_PUBLIC_URL: z.string().default("http://localhost:5000"),
+
+//  production environment
+   FRONTEND_URL: z.string().default("https://isokolink-rwanda.vercel.app"),
+  API_PUBLIC_URL: z.string().default(" https://isokolink-rwanda.onrender.com"),
 
   // Database credentials from .env
   DB_HOST: z.string().min(1, "DB_HOST is required"),
