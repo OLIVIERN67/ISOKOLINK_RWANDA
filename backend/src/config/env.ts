@@ -29,21 +29,28 @@ const baseSchema = z.object({
   PORT: numberFromString(5000),
   FRONTEND_URL: z.string().default("http://localhost:5173"),
   API_PUBLIC_URL: z.string().default("http://localhost:5000"),
-  DB_HOST: z.string().default("localhost"),
-  DB_PORT: numberFromString(3306),
-  DB_NAME: z.string().default("isokolink_rwanda"),
-  DB_USER: z.string().default("root"),
-  DB_PASSWORD: z.string().default(""),
+
+  // Database credentials from .env
+  DB_HOST: z.string().min(1, "DB_HOST is required"),
+  DB_PORT: numberFromString(24787),
+  DB_NAME: z.string().min(1, "DB_NAME is required"),
+  DB_USER: z.string().min(1, "DB_USER is required"),
+  DB_PASSWORD: z.string().min(1, "DB_PASSWORD is required"),
+
   DB_CONNECTION_LIMIT: numberFromString(10),
+
   SESSION_SECRET: z.string().optional(),
   SESSION_TTL_HOURS: numberFromString(168),
   COOKIE_DOMAIN: z.string().optional(),
   COOKIE_SECURE: boolFromString(false),
+
   EMAIL_VERIFICATION_TTL_MINUTES: numberFromString(1440),
   EMAIL_VERIFICATION_OTP_TTL_MINUTES: numberFromString(10),
   PASSWORD_RESET_TTL_MINUTES: numberFromString(30),
+
   UPLOAD_DIR: z.string().default("uploads"),
   MAX_UPLOAD_BYTES: numberFromString(5 * 1024 * 1024),
+
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: numberFromString(587),
   SMTP_SECURE: boolFromString(false),
@@ -52,7 +59,6 @@ const baseSchema = z.object({
   SMTP_FROM: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
 });
-
 const parsed = baseSchema.safeParse(process.env);
 
 if (!parsed.success) {
