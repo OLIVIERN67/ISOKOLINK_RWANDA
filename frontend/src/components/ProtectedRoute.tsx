@@ -12,10 +12,6 @@ export function ProtectedRoute({ role }: { role?: "seller" | "admin" }) {
     return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
   }
 
-  if (!user.isEmailVerified) {
-    return <Navigate to={`/verify-email?email=${encodeURIComponent(user.email)}`} replace />;
-  }
-
   if (role === "admin" && !hasRole("admin")) {
     return <Navigate to="/not-authorized" replace />;
   }

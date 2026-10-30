@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -126,20 +126,10 @@ export function SecurityPage() {
                 <dd className="font-medium">{user?.email}</dd>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <dt className="text-charcoal/55">Email verified</dt>
-                <dd className="font-medium">{user?.isEmailVerified ? "Yes" : "No"}</dd>
-              </div>
-              <div className="flex items-center justify-between gap-2">
                 <dt className="text-charcoal/55">Account created</dt>
                 <dd className="font-medium">{formatDate(user?.createdAt)}</dd>
               </div>
             </dl>
-            {!user?.isEmailVerified ? (
-              <p className="mt-3 text-xs text-charcoal/50">
-                Verify your email from your{" "}
-                <Link to="/dashboard/profile" className="font-semibold text-forest-700 hover:underline">profile page</Link>.
-              </p>
-            ) : null}
           </section>
 
           <section className="card p-5">

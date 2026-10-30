@@ -102,19 +102,12 @@ export const authApi = {
       await api.post<
         ApiEnvelope<{
           user: AuthUser;
-          emailDelivered: boolean;
         }>
       >("/auth/register", payload),
     ),
   logout: async () => {
     await api.post("/auth/logout");
   },
-  verifyEmail: async (email: string, otp: string) =>
-    unwrap(await api.post<ApiEnvelope<{ message: string }>>("/auth/verify-email", { email, otp })),
-  verifyEmailLink: async (token: string) =>
-    unwrap(await api.post<ApiEnvelope<{ message: string }>>("/auth/verify-email", { token })),
-  resendVerification: async (email: string) =>
-    unwrap(await api.post<ApiEnvelope<{ message: string }>>("/auth/resend-verification", { email })),
   forgotPassword: async (email: string) =>
     unwrap(await api.post<ApiEnvelope<{ message: string }>>("/auth/forgot-password", { email })),
   resetPassword: async (token: string, password: string) =>

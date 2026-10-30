@@ -14,11 +14,8 @@ import {
   changePassword,
   markLogin,
   registerUser,
-  resendVerificationByEmail,
   requestPasswordReset,
   resetPassword,
-  verifyEmailOtp,
-  verifyEmailToken,
 } from "./auth.service";
 
 export async function register(req: Request, res: Response) {
@@ -28,8 +25,7 @@ export async function register(req: Request, res: Response) {
   const session = await getSessionUser(token);
   return created(res, {
     user: session?.user,
-    message: "Account created. Check your email to verify your address.",
-    emailDelivered: result.emailDelivered,
+    message: "Account created. Welcome to ISOKOLINK RWANDA.",
   });
 }
 
@@ -62,22 +58,6 @@ export async function logout(req: Request, res: Response) {
 export async function me(req: Request, res: Response) {
   if (!req.user) throw ApiError.unauthorized();
   return ok(res, { user: req.user });
-}
-
-export async function verifyEmail(req: Request, res: Response) {
-  if ("otp" in req.body) {
-    await verifyEmailOtp(String(req.body.email), String(req.body.otp), req.ip);
-  } else {
-    await verifyEmailToken(String(req.body.token), req.ip);
-  }
-  return ok(res, { message: "Your email address has been verified." });
-}
-
-export async function resendVerification(req: Request, res: Response) {
-  await resendVerificationByEmail(String(req.body.email));
-  return ok(res, {
-    message: "If the account exists and is not verified, a new verification email has been sent.",
-  });
 }
 
 export async function forgotPassword(req: Request, res: Response) {

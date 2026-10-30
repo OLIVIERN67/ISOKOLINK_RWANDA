@@ -85,7 +85,7 @@ usersRouter.post(
   writeLimiter,
   validate(sellerProfileSchema),
   asyncHandler(async (req, res) => {
-    const profile = await becomeSeller(req.user!.id, req.user!.isEmailVerified, req.body, req.ip);
+    const profile = await becomeSeller(req.user!.id, req.body, req.ip);
     return created(res, profile);
   }),
 );

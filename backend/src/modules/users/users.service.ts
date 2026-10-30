@@ -118,7 +118,6 @@ export async function switchActiveMode(userId: number, mode: "buyer" | "seller",
     [userId],
   );
   if (!user) throw ApiError.notFound("Account not found.");
-  if (!user.is_email_verified) throw ApiError.forbidden("Verify your email address before switching modes.");
   if (mode === "seller" && (!user.has_seller_role || !user.has_seller_profile)) {
     const sellerRole = await queryOne<RowDataPacket>("SELECT id FROM roles WHERE name = 'seller'");
     if (!sellerRole) throw ApiError.internal("Seller role is not configured. Run the database seed.");
@@ -158,10 +157,7 @@ export async function switchActiveMode(userId: number, mode: "buyer" | "seller",
   return mode;
 }
 
-export async function becomeSeller(userId: number, emailVerified: boolean, input: SellerProfileInput, ip?: string) {
-  if (!emailVerified) {
-    throw ApiError.forbidden("Verify your email address before registering as a seller.");
-  }
+export async function becomeSeller(userId: number, input: SellerProfileInput, ip?: string) {
   const existing = await queryOne<RowDataPacket>("SELECT id FROM seller_profiles WHERE user_id = ?", [userId]);
   if (existing) throw ApiError.conflict("You already have a seller profile.");
 

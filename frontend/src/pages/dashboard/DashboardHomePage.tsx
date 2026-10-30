@@ -11,7 +11,7 @@ import {
   TrendingUp,
   UserCheck,
 } from "lucide-react";
-import { authApi, getApiError, messagingApi, notificationApi, priceApi, productApi, referenceApi, userApi } from "../../services/api";
+import { getApiError, messagingApi, notificationApi, priceApi, productApi, referenceApi, userApi } from "../../services/api";
 import type { Announcement, BuyerStats, ConversationSummary, MarketObservation, NotificationItem, Product } from "../../types";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -19,7 +19,6 @@ import { useDocumentTitle } from "../../components/ScrollToTop";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { StatCard } from "../../components/ui/StatCard";
 import { Alert } from "../../components/ui/Alert";
-import { Button } from "../../components/ui/Button";
 import { ProductCard, ProductGridSkeleton } from "../../components/ProductCard";
 import { Badge } from "../../components/ui/Badge";
 import { formatCurrency, formatDate, formatRelative, freshnessTone } from "../../utils/format";
@@ -27,7 +26,7 @@ import { formatCurrency, formatDate, formatRelative, freshnessTone } from "../..
 export function DashboardHomePage() {
   useDocumentTitle("Dashboard");
   const { user, hasRole } = useAuth();
-  const { success, error } = useToast();
+  const { error } = useToast();
   const navigate = useNavigate();
   const [stats, setStats] = useState<BuyerStats | null>(null);
   const [featured, setFeatured] = useState<Product[]>([]);
@@ -36,7 +35,6 @@ export function DashboardHomePage() {
   const [recentConversations, setRecentConversations] = useState<ConversationSummary[]>([]);
   const [recentNotifications, setRecentNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -65,18 +63,6 @@ export function DashboardHomePage() {
       active = false;
     };
   }, []);
-
-  async function resendVerification() {
-    setResending(true);
-    try {
-      const result = await authApi.resendVerification(user?.email ?? "");
-      success(result.message);
-    } catch (requestError) {
-      error(getApiError(requestError).message);
-    } finally {
-      setResending(false);
-    }
-  }
 
   async function openRecentNotification(notification: NotificationItem) {
     if (!notification.isRead) {
@@ -115,20 +101,6 @@ export function DashboardHomePage() {
           </>
         }
       />
-
-      {user && !user.isEmailVerified ? (
-        <Alert tone="warning" title="Verify your email address" className="mb-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span>Verify your email to unlock seller registration and account recovery.</span>
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" size="sm" variant="outline" onClick={resendVerification} loading={resending}>
-                Resend verification
-              </Button>
-              <Link to={`/verify-email?email=${encodeURIComponent(user.email)}`} className="btn-outline btn-sm">Verification page</Link>
-            </div>
-          </div>
-        </Alert>
-      ) : null}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard

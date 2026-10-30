@@ -16,9 +16,7 @@ import {
   logout,
   me,
   register,
-  resendVerification,
   resetPasswordHandler,
-  verifyEmail,
 } from "./auth.controller";
 import {
   forgotPasswordSchema,
@@ -26,8 +24,6 @@ import {
   passwordSchema,
   registerSchema,
   resetPasswordSchema,
-  verifyEmailSchema,
-  resendVerificationSchema,
 } from "./auth.schemas";
 
 const router = Router();
@@ -36,8 +32,6 @@ router.post("/register", registrationLimiter, validate(registerSchema), asyncHan
 router.post("/login", authLimiter, validate(loginSchema), asyncHandler(login));
 router.post("/logout", asyncHandler(logout));
 router.get("/me", requireSessionAuth, asyncHandler(me));
-router.post("/verify-email", authLimiter, validate(verifyEmailSchema), asyncHandler(verifyEmail));
-router.post("/resend-verification", passwordResetLimiter, validate(resendVerificationSchema), asyncHandler(resendVerification));
 router.post(
   "/forgot-password",
   passwordResetLimiter,

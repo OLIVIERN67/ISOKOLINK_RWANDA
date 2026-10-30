@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { BadgeCheck, MailCheck, ShieldCheck, Store, UserRound } from "lucide-react";
-import { authApi, getApiError, productApi, userApi } from "../../services/api";
+import { BadgeCheck, ShieldCheck, Store, UserRound } from "lucide-react";
+import { getApiError, productApi, userApi } from "../../services/api";
 import type { MyProfile } from "../../types";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -34,12 +34,11 @@ type FormValues = z.infer<typeof schema>;
 
 export function ProfilePage() {
   useDocumentTitle("My profile");
-  const { user, refresh } = useAuth();
+  const { refresh } = useAuth();
   const { success, error } = useToast();
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [resending, setResending] = useState(false);
 
   const {
     register,
@@ -95,18 +94,6 @@ export function ProfilePage() {
       success("Profile updated.");
     } catch (requestError) {
       error(getApiError(requestError).message);
-    }
-  }
-
-  async function resendVerification() {
-    setResending(true);
-    try {
-      const result = await authApi.resendVerification(user?.email ?? "");
-      success(result.message);
-    } catch (requestError) {
-      error(getApiError(requestError).message);
-    } finally {
-      setResending(false);
     }
   }
 
@@ -262,12 +249,6 @@ export function ProfilePage() {
             </h2>
             <div className="mt-3 space-y-2 text-xs">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-charcoal/55">Email</span>
-                <Badge tone={profile.isEmailVerified ? "green" : "gold"}>
-                  {profile.isEmailVerified ? "Verified" : "Unverified"}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between gap-2">
                 <span className="text-charcoal/55">Account</span>
                 <Badge tone={profile.status === "active" ? "green" : "red"}>{profile.status}</Badge>
               </div>
@@ -276,17 +257,6 @@ export function ProfilePage() {
                 <span className="font-medium">{formatDate(profile.lastLoginAt)}</span>
               </div>
             </div>
-            {!profile.isEmailVerified ? (
-              <div className="mt-3">
-                <Button type="button" size="sm" variant="outline" onClick={resendVerification} loading={resending} className="w-full">
-                  <MailCheck className="h-4 w-4" aria-hidden />
-                  Resend verification
-                </Button>
-                <Link to={`/verify-email?email=${encodeURIComponent(user?.email ?? profile.email)}`} className="mt-2 block text-center text-xs font-semibold text-forest-700 hover:underline">
-                  Open verification page
-                </Link>
-              </div>
-            ) : null}
           </section>
 
           {!profile.roles.includes("seller") ? (

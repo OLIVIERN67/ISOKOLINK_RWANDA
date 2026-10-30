@@ -187,7 +187,6 @@ export function DashboardLayout({ variant }: { variant: Variant }) {
                 <p className="truncate text-sm font-semibold text-charcoal">{activeItem?.label ?? t("common.dashboard")}</p>
                 <p className="hidden truncate text-[11px] text-charcoal/50 sm:block">
                   {t("common.signedInAs", { name: user.fullName })}
-                  {user.isEmailVerified ? "" : ` — ${t("common.emailNotVerified")}`}
                 </p>
               </div>
             </div>

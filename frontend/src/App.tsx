@@ -17,7 +17,6 @@ const LoginPage = lazyNamed(() => import("./pages/auth/LoginPage"), "LoginPage")
 const RegisterPage = lazyNamed(() => import("./pages/auth/RegisterPage"), "RegisterPage");
 const ForgotPasswordPage = lazyNamed(() => import("./pages/auth/ForgotPasswordPage"), "ForgotPasswordPage");
 const ResetPasswordPage = lazyNamed(() => import("./pages/auth/ResetPasswordPage"), "ResetPasswordPage");
-const VerifyEmailPage = lazyNamed(() => import("./pages/auth/VerifyEmailPage"), "VerifyEmailPage");
 const HomePage = lazyNamed(() => import("./pages/HomePage"), "HomePage");
 const ProductsPage = lazyNamed(() => import("./pages/ProductsPage"), "ProductsPage");
 const ProductDetailPage = lazyNamed(() => import("./pages/ProductDetailPage"), "ProductDetailPage");
@@ -84,7 +83,6 @@ export function App() {
           <Route path="register" element={<RegisterPage />} />
           <Route path="forgot-password" element={<ForgotPasswordPage />} />
           <Route path="reset-password" element={<ResetPasswordPage />} />
-          <Route path="verify-email" element={<VerifyEmailPage />} />
         </Route>
 
         <Route element={<ProtectedRoute />}>

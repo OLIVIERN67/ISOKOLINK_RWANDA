@@ -38,7 +38,7 @@ type FormValues = z.infer<typeof schema>;
 
 export function BecomeSellerPage() {
   useDocumentTitle("Become a seller");
-  const { user, hasRole, refresh } = useAuth();
+  const { hasRole, refresh } = useAuth();
   const { success, error } = useToast();
   const navigate = useNavigate();
   const [districts, setDistricts] = useState<DistrictLocation[]>([]);
@@ -125,21 +125,6 @@ export function BecomeSellerPage() {
             </div>
           </div>
         </Alert>
-      </div>
-    );
-  }
-
-  if (user && !user.isEmailVerified) {
-    return (
-      <div>
-        <PageHeader eyebrow="Seller" title="Verify your email first" subtitle="Seller applications require a verified email address." />
-        <Alert tone="warning" title="Email verification required" className="mb-4">
-          Verify your email from your profile page, then return here to complete your seller application.
-        </Alert>
-        <div className="flex gap-2">
-          <Link to="/dashboard/profile" className="btn-primary">Go to profile</Link>
-          <Link to="/dashboard" className="btn-outline">Back to dashboard</Link>
-        </div>
       </div>
     );
   }

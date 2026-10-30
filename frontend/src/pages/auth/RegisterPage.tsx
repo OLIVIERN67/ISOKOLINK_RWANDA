@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, MailCheck, ShoppingBasket, Store, UserPlus } from "lucide-react";
+import { Eye, EyeOff, ShoppingBasket, Store, UserPlus } from "lucide-react";
 import { getApiError } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -52,9 +52,9 @@ export function RegisterPage() {
   useDocumentTitle("Create an account");
   const { register: registerUser } = useAuth();
   const { success } = useToast();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
-  const [created, setCreated] = useState<{ email: string; delivered: boolean; accountType: "buyer" | "seller" } | null>(null);
 
   const {
     register,
@@ -78,7 +78,7 @@ export function RegisterPage() {
   async function onSubmit(values: FormValues) {
     setServerError(null);
     try {
-      const result = await registerUser({
+      await registerUser({
         fullName: values.fullName,
         email: values.email,
         password: values.password,
@@ -88,11 +88,7 @@ export function RegisterPage() {
         acceptTerms: true,
       });
       success("Account created.");
-      setCreated({
-        email: values.email,
-        delivered: result.emailDelivered,
-        accountType: values.accountType,
-      });
+      navigate(values.accountType === "seller" ? "/seller" : "/dashboard", { replace: true });
     } catch (error) {
       const parsed = getApiError(error);
       parsed.details?.forEach((detail) => {
@@ -102,39 +98,6 @@ export function RegisterPage() {
       });
       setServerError(parsed.message);
     }
-  }
-
-  if (created) {
-    return (
-      <AuthCard
-        title="Check your email"
-        subtitle={`We created your ${created.accountType} account for ${created.email}. Verify your address to continue.`}
-        footer={
-          <>
-            Already verified? <Link to="/login" className="font-semibold text-forest-700 hover:underline">Sign in</Link>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-forest-50 text-forest-600">
-            <MailCheck className="h-7 w-7" aria-hidden />
-          </span>
-          <p className="text-sm leading-6 text-charcoal/70">
-            {created.delivered
-              ? "A 6-digit verification code has been sent to your inbox. Enter it promptly to activate your account."
-              : "We could not confirm email delivery. Please use the verification page to request a new email."}
-          </p>
-          <Link to={`/verify-email?email=${encodeURIComponent(created.email)}`} className="btn-primary w-full">
-            Open verification page
-          </Link>
-          <p className="text-xs leading-5 text-charcoal/45">
-            {created.accountType === "seller"
-              ? "After verification, you will be taken to your seller workspace to manage products and your business profile."
-              : "After verification, you will be taken to your buyer workspace to browse products and compare prices."}
-          </p>
-        </div>
-      </AuthCard>
-    );
   }
 
   return (

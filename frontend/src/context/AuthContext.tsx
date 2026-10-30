@@ -31,7 +31,6 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<AuthUser>;
   register: (payload: RegisterPayload) => Promise<{
     user: AuthUser;
-    emailDelivered: boolean;
   }>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
