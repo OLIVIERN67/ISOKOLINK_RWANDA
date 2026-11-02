@@ -290,7 +290,7 @@ export async function updateSellerProfile(userId: number, input: Partial<SellerP
 
 export async function getPublicSeller(userId: number) {
   const row = await queryOne<RowDataPacket>(
-    `SELECT u.id, u.full_name, u.created_at, sp.id AS profile_id, sp.business_name, sp.description,
+    `SELECT u.id, u.full_name, u.phone, u.created_at, sp.id AS profile_id, sp.business_name, sp.description,
             sp.contact_phone, sp.public_contact_visibility, sp.preferred_contact, sp.profile_image_url,
             sp.status AS seller_status, l.name AS district_name, p.name AS province_name, m.name AS market_name
      FROM users u
@@ -312,7 +312,13 @@ export async function getPublicSeller(userId: number) {
     businessName: row.business_name === null ? String(row.full_name) : String(row.business_name),
     description: row.description === null ? null : String(row.description),
     profileImageUrl: row.profile_image_url === null ? null : String(row.profile_image_url),
-    phone: row.public_contact_visibility ? (row.contact_phone === null ? null : String(row.contact_phone)) : null,
+    phone: row.public_contact_visibility
+      ? row.phone === null
+        ? row.contact_phone === null
+          ? null
+          : String(row.contact_phone)
+        : String(row.phone)
+      : null,
     publicContactVisible: Boolean(row.public_contact_visibility),
     preferredContact: String(row.preferred_contact),
     district: row.district_name === null ? null : String(row.district_name),

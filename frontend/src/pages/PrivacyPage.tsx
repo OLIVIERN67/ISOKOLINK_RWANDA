@@ -82,7 +82,7 @@ export function PrivacyPage() {
         <h2>9. Changes and contact</h2>
         <p>
           We may update this policy and will revise the date above. Questions can be sent to{" "}
-          <a href="mailto:privacy@isokolink.rw" className="font-semibold text-forest-700 hover:underline">privacy@isokolink.rw</a>.
+          <a href="mailto:olivierndiho67@gmail.com" className="font-semibold text-forest-700 hover:underline">olivierndiho67@gmail.com</a>.
         </p>
       </article>
     </div>

@@ -16,11 +16,16 @@ import { Modal } from "../components/ui/Modal";
 import { EmptyState, ErrorState, LoadingPage } from "../components/ui/States";
 import { formatDate } from "../utils/format";
 import { REPORT_REASONS } from "../utils/reports";
+import { sellerWhatsAppUrl } from "../utils/whatsapp";
+import { WhatsAppContactButton } from "../components/WhatsAppContactButton";
+import { useI18n } from "../context/I18nContext";
 
 export function SellerStorefrontPage() {
   const { id } = useParams<{ id: string }>();
   const sellerId = Number(id);
   const { user } = useAuth();
+  const { language } = useI18n();
+  const isSelf = user?.id === sellerId;
   const { success, error: toastError } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,6 +38,9 @@ export function SellerStorefrontPage() {
   const [reportDetails, setReportDetails] = useState("");
   const [reportError, setReportError] = useState<string | null>(null);
   const [reporting, setReporting] = useState(false);
+  const whatsappUrl = seller && !isSelf && seller.publicContactVisible
+    ? sellerWhatsAppUrl(seller.phone, seller.businessName, language)
+    : null;
 
   useDocumentTitle(seller ? `${seller.businessName} · Seller` : "Seller storefront");
 
@@ -107,8 +115,6 @@ export function SellerStorefrontPage() {
     );
   }
 
-  const isSelf = user?.id === seller.id;
-
   return (
     <div>
       <section className="border-b border-forest-100 bg-forest-700">
@@ -146,11 +152,11 @@ export function SellerStorefrontPage() {
                   <Store className="h-3.5 w-3.5" aria-hidden />
                   {seller.activeListings} active listing{seller.activeListings === 1 ? "" : "s"}
                 </span>
-                {seller.phone ? (
-                  <span className="flex items-center gap-1.5">
+                {seller.phone && seller.publicContactVisible ? (
+                  <a href={`tel:${seller.phone}`} className="flex items-center gap-1.5 hover:text-white">
                     <Phone className="h-3.5 w-3.5" aria-hidden />
                     {seller.phone}
-                  </span>
+                  </a>
                 ) : null}
               </div>
             </div>
@@ -163,6 +169,13 @@ export function SellerStorefrontPage() {
                   variant="gold"
                   className="shrink-0"
                 />
+                {whatsappUrl ? <WhatsAppContactButton href={whatsappUrl} className="shrink-0" /> : null}
+                {seller.phone && seller.publicContactVisible ? (
+                  <a href={`tel:${seller.phone}`} className="btn-outline shrink-0">
+                    <Phone className="h-4 w-4" aria-hidden />
+                    Call seller
+                  </a>
+                ) : null}
                 <Button
                   type="button"
                   variant="outline"

@@ -6,6 +6,7 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { Button } from "../components/ui/Button";
 import { Field } from "../components/ui/Field";
 import { useI18n } from "../context/I18nContext";
+import { OFFICIAL_CONTACT } from "../config/contact";
 
 export function ContactPage() {
   const { t } = useI18n();
@@ -18,7 +19,7 @@ export function ContactPage() {
     event.preventDefault();
     const subject = encodeURIComponent(`ISOKOLINK enquiry from ${name || "a visitor"}`);
     const body = encodeURIComponent(`${message}\n\nFrom: ${name}\nEmail: ${email}`);
-    window.location.href = `mailto:hello@isokolink.rw?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:${OFFICIAL_CONTACT.email}?subject=${subject}&body=${body}`;
   }
 
   return (
@@ -39,15 +40,15 @@ export function ContactPage() {
             {
               icon: Mail,
               title: t("contact.email"),
-              body: "hello@isokolink.rw",
-              href: "mailto:hello@isokolink.rw",
+              body: OFFICIAL_CONTACT.email,
+              href: `mailto:${OFFICIAL_CONTACT.email}`,
             },
-            {
+            ...OFFICIAL_CONTACT.phones.map((phone) => ({
               icon: Phone,
               title: t("contact.phone"),
-              body: "+250 788 000 000",
-              href: "tel:+250788000000",
-            },
+              body: phone,
+              href: `tel:${phone}`,
+            })),
             {
               icon: MapPin,
               title: t("contact.office"),
@@ -59,7 +60,7 @@ export function ContactPage() {
               body: t("contact.hoursValue"),
             },
           ].map((item) => (
-            <div key={item.title} className="card flex items-start gap-3 p-4">
+            <div key={`${item.title}-${item.body}`} className="card flex items-start gap-3 p-4">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-forest-50 text-forest-700">
                 <item.icon className="h-5 w-5" aria-hidden />
               </span>

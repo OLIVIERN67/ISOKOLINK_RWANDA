@@ -101,7 +101,7 @@ export function TermsPage() {
         <h2>11. Contact</h2>
         <p>
           Questions about these terms can be sent to{" "}
-          <a href="mailto:legal@isokolink.rw" className="font-semibold text-forest-700 hover:underline">legal@isokolink.rw</a>.
+          <a href="mailto:olivierndiho67@gmail.com" className="font-semibold text-forest-700 hover:underline">olivierndiho67@gmail.com</a>.
         </p>
       </article>
     </div>
