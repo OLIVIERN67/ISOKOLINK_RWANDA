@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { passwordSchema } from "../auth/auth.schemas";
 
 export const adminProductQuerySchema = z.object({
   status: z
@@ -43,6 +44,33 @@ export const roleChangeSchema = z.object({
   role: z.enum(["admin", "seller"]),
   action: z.enum(["grant", "revoke"]),
 });
+
+export const adminConversationQuerySchema = z.object({
+  q: z.string().trim().max(120).optional(),
+  status: z.enum(["open", "closed", "archived", "all"]).default("all"),
+  participantId: z.coerce.number().int().positive().optional(),
+  productId: z.coerce.number().int().positive().optional(),
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(60).default(20),
+});
+
+export const adminConversationAccessSchema = z.object({
+  before: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+  reason: z.string().trim().min(3, "Choose a legitimate access purpose.").max(500),
+});
+
+export const adminPasswordResetSchema = z
+  .object({
+    newPassword: passwordSchema,
+    confirmPassword: z.string().min(1, "Confirm the new password.").max(128),
+  })
+  .refine((value) => value.newPassword === value.confirmPassword, {
+    message: "The passwords do not match.",
+    path: ["confirmPassword"],
+  });
 
 export const auditLogQuerySchema = z.object({
   q: z.string().trim().max(120).optional(),

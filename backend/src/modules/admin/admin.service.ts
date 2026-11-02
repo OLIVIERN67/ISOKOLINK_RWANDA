@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import type { RowDataPacket } from "mysql2/promise";
 import { execute, query, queryOne, withTransaction } from "../../db/pool";
 import { createNotification } from "../../services/notification.service";
@@ -16,6 +17,8 @@ import {
 import { getProductApprovalHistory, notifySellerOfStatus } from "../products/products.service";
 import { getSellerProfile } from "../users/users.service";
 import type {
+  adminConversationAccessSchema,
+  adminConversationQuerySchema,
   adminProductQuerySchema,
   adminUserQuerySchema,
   auditLogQuerySchema,
@@ -24,7 +27,11 @@ import type { z } from "zod";
 
 type AdminProductQuery = z.infer<typeof adminProductQuerySchema>;
 type AdminUserQuery = z.infer<typeof adminUserQuerySchema>;
+type AdminConversationQuery = z.infer<typeof adminConversationQuerySchema>;
+type AdminConversationAccess = z.infer<typeof adminConversationAccessSchema>;
 type AuditLogQuery = z.infer<typeof auditLogQuerySchema>;
+
+const ADMIN_PASSWORD_ROUNDS = 12;
 
 export async function listAdminProducts(filters: AdminProductQuery) {
   const pagination = getPagination({ page: filters.page, pageSize: filters.pageSize });
@@ -412,6 +419,262 @@ export async function changeUserRole(
     metadata: { role },
     ipAddress: ip,
   });
+  return getAdminUser(userId);
+}
+
+function mapConversationParticipant(row: RowDataPacket) {
+  return {
+    id: Number(row.id),
+    name: String(row.full_name),
+    email: String(row.email),
+    businessName: row.business_name === null ? null : String(row.business_name),
+    roles: row.roles ? String(row.roles).split(",") : [],
+    status: String(row.status),
+  };
+}
+
+async function findConversationParticipants(conversationIds: number[]) {
+  const grouped = new Map<number, ReturnType<typeof mapConversationParticipant>[]>();
+  if (conversationIds.length === 0) return grouped;
+  const placeholders = conversationIds.map(() => "?").join(", ");
+  const rows = await query<RowDataPacket[]>(
+    `SELECT cp.conversation_id, u.id, u.full_name, u.email, u.status, sp.business_name,
+            GROUP_CONCAT(DISTINCT r.name ORDER BY r.name) AS roles
+     FROM conversation_participants cp
+     JOIN users u ON u.id = cp.user_id
+     LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+     LEFT JOIN user_roles ur ON ur.user_id = u.id
+     LEFT JOIN roles r ON r.id = ur.role_id
+     WHERE cp.conversation_id IN (${placeholders})
+     GROUP BY cp.conversation_id, u.id, sp.business_name
+     ORDER BY cp.conversation_id ASC, u.full_name ASC`,
+    conversationIds,
+  );
+  for (const row of rows) {
+    const conversationId = Number(row.conversation_id);
+    const list = grouped.get(conversationId) ?? [];
+    list.push(mapConversationParticipant(row));
+    grouped.set(conversationId, list);
+  }
+  return grouped;
+}
+
+function mapAdminConversation(
+  row: RowDataPacket,
+  participants: ReturnType<typeof mapConversationParticipant>[],
+) {
+  return {
+    id: Number(row.id),
+    subject: row.subject === null ? null : String(row.subject),
+    status: String(row.status),
+    productId: row.product_id === null ? null : Number(row.product_id),
+    productName: row.product_name === null ? null : String(row.product_name),
+    createdBy: Number(row.created_by),
+    createdAt: String(row.created_at),
+    lastMessageAt: row.last_message_at === null ? null : String(row.last_message_at),
+    lastMessage: row.last_message === null ? null : String(row.last_message),
+    lastSenderId: row.last_sender_id === null ? null : Number(row.last_sender_id),
+    messageCount: Number(row.message_count ?? 0),
+    participants,
+  };
+}
+
+export async function listAdminConversations(filters: AdminConversationQuery) {
+  const pagination = getPagination({ page: filters.page, pageSize: filters.pageSize });
+  const where: string[] = [];
+  const params: unknown[] = [];
+  if (filters.status !== "all") {
+    where.push("c.status = ?");
+    params.push(filters.status);
+  }
+  if (filters.participantId) {
+    where.push(
+      "EXISTS (SELECT 1 FROM conversation_participants cpfilter WHERE cpfilter.conversation_id = c.id AND cpfilter.user_id = ?)",
+    );
+    params.push(filters.participantId);
+  }
+  if (filters.productId) {
+    where.push("c.product_id = ?");
+    params.push(filters.productId);
+  }
+  if (filters.from) {
+    where.push("c.created_at >= ?");
+    params.push(`${filters.from} 00:00:00`);
+  }
+  if (filters.to) {
+    where.push("c.created_at <= ?");
+    params.push(`${filters.to} 23:59:59`);
+  }
+  if (filters.q) {
+    const term = `%${filters.q}%`;
+    where.push(`(c.subject LIKE ? OR p.name LIKE ? OR EXISTS (
+      SELECT 1 FROM conversation_participants cpq
+      JOIN users uq ON uq.id = cpq.user_id
+      WHERE cpq.conversation_id = c.id AND (uq.full_name LIKE ? OR uq.email LIKE ?)
+    ) OR EXISTS (
+      SELECT 1 FROM messages mq WHERE mq.conversation_id = c.id AND mq.body LIKE ?
+    ))`);
+    params.push(term, term, term, term, term);
+  }
+  const whereSql = where.length > 0 ? where.join(" AND ") : "1=1";
+  const countRow = await queryOne<RowDataPacket>(
+    `SELECT COUNT(*) AS total FROM conversations c
+     LEFT JOIN products p ON p.id = c.product_id
+     WHERE ${whereSql}`,
+    params,
+  );
+  const rows = await query<RowDataPacket[]>(
+    `SELECT c.id, c.subject, c.status, c.product_id, c.created_by, c.created_at, c.last_message_at,
+            p.name AS product_name,
+            (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id) AS message_count,
+            (SELECT m.body FROM messages m WHERE m.conversation_id = c.id ORDER BY m.id DESC LIMIT 1) AS last_message,
+            (SELECT m.sender_id FROM messages m WHERE m.conversation_id = c.id ORDER BY m.id DESC LIMIT 1) AS last_sender_id
+     FROM conversations c
+     LEFT JOIN products p ON p.id = c.product_id
+     WHERE ${whereSql}
+     ORDER BY COALESCE(c.last_message_at, c.created_at) DESC
+     LIMIT ? OFFSET ?`,
+    [...params, pagination.pageSize, pagination.offset],
+  );
+  const participants = await findConversationParticipants(rows.map((row) => Number(row.id)));
+  return {
+    items: rows.map((row) => mapAdminConversation(row, participants.get(Number(row.id)) ?? [])),
+    meta: paginationMeta(Number(countRow?.total ?? 0), pagination),
+  };
+}
+
+export async function getAdminConversation(
+  conversationId: number,
+  adminId: number,
+  access: AdminConversationAccess,
+  ip?: string,
+) {
+  const conversation = await queryOne<RowDataPacket>(
+    `SELECT c.id, c.subject, c.status, c.product_id, c.created_by, c.created_at, c.last_message_at,
+            p.name AS product_name, p.price AS product_price, p.currency AS product_currency
+     FROM conversations c
+     LEFT JOIN products p ON p.id = c.product_id
+     WHERE c.id = ?`,
+    [conversationId],
+  );
+  if (!conversation) throw ApiError.notFound("Conversation not found.");
+
+  const participants = await findConversationParticipants([conversationId]);
+  const participantList = participants.get(conversationId) ?? [];
+
+  const params: unknown[] = [conversationId];
+  let beforeSql = "";
+  if (access.before) {
+    beforeSql = "AND m.id < ?";
+    params.push(access.before);
+  }
+  params.push(access.limit);
+  const messageRows = await query<RowDataPacket[]>(
+    `SELECT m.id, m.sender_id, m.body, m.created_at, u.full_name AS sender_name, sp.business_name AS sender_business
+     FROM messages m
+     JOIN users u ON u.id = m.sender_id
+     LEFT JOIN seller_profiles sp ON sp.user_id = u.id
+     WHERE m.conversation_id = ? ${beforeSql}
+     ORDER BY m.id DESC LIMIT ?`,
+    params,
+  );
+
+  await writeAuditLog({
+    actorId: adminId,
+    action: "conversation.viewed",
+    entityType: "conversation",
+    entityId: conversationId,
+    metadata: {
+      reason: access.reason ?? null,
+      participants: participantList.map((participant) => ({
+        id: participant.id,
+        name: participant.name,
+        roles: participant.roles,
+      })),
+      returnedMessages: messageRows.length,
+    },
+    ipAddress: ip,
+  });
+
+  return {
+    id: Number(conversation.id),
+    subject: conversation.subject === null ? null : String(conversation.subject),
+    status: String(conversation.status),
+    productId: conversation.product_id === null ? null : Number(conversation.product_id),
+    product: conversation.product_id
+      ? {
+          id: Number(conversation.product_id),
+          name: String(conversation.product_name),
+          price: Number(conversation.product_price),
+          currency: String(conversation.product_currency),
+        }
+      : null,
+    createdBy: Number(conversation.created_by),
+    createdAt: String(conversation.created_at),
+    lastMessageAt: conversation.last_message_at === null ? null : String(conversation.last_message_at),
+    participants: participantList,
+    messages: messageRows.reverse().map((row) => ({
+      id: Number(row.id),
+      senderId: Number(row.sender_id),
+      senderName: String(row.sender_name),
+      senderBusinessName: row.sender_business === null ? null : String(row.sender_business),
+      body: String(row.body),
+      createdAt: String(row.created_at),
+    })),
+    access: {
+      reason: access.reason ?? null,
+      reviewedAt: new Date().toISOString(),
+    },
+  };
+}
+
+export async function resetUserPassword(
+  userId: number,
+  adminId: number,
+  newPassword: string,
+  ip?: string,
+) {
+  if (userId === adminId) {
+    throw ApiError.forbidden("Use your account security settings to change your own password.");
+  }
+  const user = await queryOne<RowDataPacket>(
+    "SELECT id, full_name, status FROM users WHERE id = ?",
+    [userId],
+  );
+  if (!user) throw ApiError.notFound("User not found.");
+  const roles = await userRoles(userId);
+  if (roles.includes("admin")) {
+    throw ApiError.forbidden("Administrator passwords cannot be reset from this screen.");
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, ADMIN_PASSWORD_ROUNDS);
+  await withTransaction(async (connection) => {
+    await connection.execute("UPDATE users SET password_hash = ? WHERE id = ?", [passwordHash, userId]);
+    await connection.execute("DELETE FROM sessions WHERE user_id = ?", [userId]);
+    await connection.execute(
+      "DELETE FROM auth_tokens WHERE user_id = ? AND type = 'password_reset' AND used_at IS NULL",
+      [userId],
+    );
+    await connection.execute(
+      `INSERT INTO notifications (user_id, type, title, body, link)
+       VALUES (?, 'security', ?, ?, '/dashboard/settings')`,
+      [
+        userId,
+        "Password reset by administrator",
+        "An administrator reset your password. Sign in with the new password provided by support, then change it from your security settings.",
+      ],
+    );
+  });
+
+  await writeAuditLog({
+    actorId: adminId,
+    action: "user.password_reset_by_admin",
+    entityType: "user",
+    entityId: userId,
+    metadata: { sessionsRevoked: true, resetTokensInvalidated: true },
+    ipAddress: ip,
+  });
+
   return getAdminUser(userId);
 }
 

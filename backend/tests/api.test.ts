@@ -30,7 +30,7 @@ describe("API access controls and validation", () => {
     });
   });
 
-  it.each(["/api/admin/stats", "/api/conversations"]) (
+  it.each(["/api/admin/stats", "/api/admin/conversations", "/api/conversations"]) (
     "requires authentication for %s",
     async (path) => {
       const response = await request(app).get(path);

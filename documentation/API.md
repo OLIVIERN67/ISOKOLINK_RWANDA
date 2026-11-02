@@ -205,8 +205,26 @@ Moderation actions notify the seller and are written to the audit log.
 | POST | `/admin/users/:id/suspend` | `reason` (5+ chars) |
 | POST | `/admin/users/:id/reactivate` | – |
 | POST | `/admin/users/:id/roles` | `role` (`admin`/`seller`), `action` (`grant`/`revoke`) |
+| POST | `/admin/users/:id/reset-password` | `newPassword`, `confirmPassword` (both must match and meet the password policy) |
 
-Admins cannot suspend or demote their own account through these endpoints.
+Admins cannot suspend or demote their own account through these endpoints. The
+password reset endpoint never returns or displays the existing hash: it hashes
+the new password, revokes all of the user's sessions, invalidates pending reset
+links, notifies the user, and writes `user.password_reset_by_admin` to the audit
+log. Administrators cannot reset their own password or another administrator's
+password from this endpoint.
+
+### Conversation monitoring
+
+| Method | Path | Body / query |
+| ------ | ---- | ------------ |
+| GET | `/admin/conversations` | `q?` (participants, subject, product, or message text), `status` (`open`/`closed`/`archived`/`all`), `participantId?`, `productId?`, `from?`, `to?` (YYYY-MM-DD), `page`, `pageSize` |
+| GET | `/admin/conversations/:id` | `reason` (required, 3–500 characters, recorded in the audit log), `before?` (message id), `limit?` (max 200) |
+
+Conversation monitoring is read-only and does not change participant read
+receipts. Every call to the detail endpoint writes a `conversation.viewed` audit
+entry containing the administrator, access reason, participant IDs/roles,
+returned message count, timestamp, and IP address.
 
 ### Audit logs and reference data
 

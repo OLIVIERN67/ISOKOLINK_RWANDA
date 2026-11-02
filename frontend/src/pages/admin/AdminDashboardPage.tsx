@@ -6,6 +6,7 @@ import {
   ArrowRight,
   BadgeCheck,
   Clock3,
+  Eye,
   MapPin,
   Package,
   Store,
@@ -216,9 +217,10 @@ export function AdminDashboardPage() {
           <MapPin className="h-4 w-4 text-forest-600" aria-hidden />
           Administrative shortcuts
         </h2>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
           {[
             { label: "Manage users", to: "/admin/users", icon: Users },
+            { label: "Chat monitoring", to: "/admin/chats", icon: Eye },
             { label: "Reference data", to: "/admin/categories", icon: BadgeCheck },
             { label: "Announcements", to: "/admin/announcements", icon: Store },
             { label: "Admin messages", to: "/admin/conversations", icon: ArrowRight },

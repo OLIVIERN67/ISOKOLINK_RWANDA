@@ -362,6 +362,51 @@ export interface AdminUserDetail extends AdminUserSummary {
   recentReports: Array<{ id: number; reason: string; status: string; createdAt: string }>;
 }
 
+export interface AdminConversationParticipant {
+  id: number;
+  name: string;
+  email: string;
+  businessName: string | null;
+  roles: string[];
+  status: string;
+}
+
+export interface AdminConversationSummary {
+  id: number;
+  subject: string | null;
+  status: string;
+  productId: number | null;
+  productName: string | null;
+  createdBy: number;
+  createdAt: string;
+  lastMessageAt: string | null;
+  lastMessage: string | null;
+  lastSenderId: number | null;
+  messageCount: number;
+  participants: AdminConversationParticipant[];
+}
+
+export interface AdminConversationDetail {
+  id: number;
+  subject: string | null;
+  status: string;
+  productId: number | null;
+  product: { id: number; name: string; price: number; currency: string } | null;
+  createdBy: number;
+  createdAt: string;
+  lastMessageAt: string | null;
+  participants: AdminConversationParticipant[];
+  messages: Array<{
+    id: number;
+    senderId: number;
+    senderName: string;
+    senderBusinessName: string | null;
+    body: string;
+    createdAt: string;
+  }>;
+  access: { reason: string | null; reviewedAt: string };
+}
+
 export interface AdminStats {
   totals: {
     users: number;

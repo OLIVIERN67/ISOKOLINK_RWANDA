@@ -7,6 +7,11 @@ import { sha256, safeEqual, randomToken } from "../src/utils/crypto";
 import { passwordSchema, emailSchema, registerSchema } from "../src/modules/auth/auth.schemas";
 import { productCreateSchema } from "../src/modules/products/products.schemas";
 import { reportUpdateSchema } from "../src/modules/reports/reports.schemas";
+import {
+  adminConversationAccessSchema,
+  adminConversationQuerySchema,
+  adminPasswordResetSchema,
+} from "../src/modules/admin/admin.schemas";
 import { buildPriceComparisonSummary } from "../src/utils/priceComparison";
 
 function isoDaysAgo(days: number): string {
@@ -171,6 +176,48 @@ describe("product validation", () => {
   it("caps images at five", () => {
     const images = Array.from({ length: 6 }, (_, index) => `/uploads/file-${index}.jpg`);
     expect(productCreateSchema.safeParse({ ...valid, images }).success).toBe(false);
+  });
+});
+
+describe("admin security validation", () => {
+  it("requires a strong, confirmed administrator password reset", () => {
+    expect(
+      adminPasswordResetSchema.safeParse({
+        newPassword: "Str0ngPass",
+        confirmPassword: "Str0ngPass",
+      }).success,
+    ).toBe(true);
+    expect(
+      adminPasswordResetSchema.safeParse({
+        newPassword: "weakpass",
+        confirmPassword: "weakpass",
+      }).success,
+    ).toBe(false);
+    expect(
+      adminPasswordResetSchema.safeParse({
+        newPassword: "Str0ngPass",
+        confirmPassword: "Different1",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("normalizes conversation monitoring filters", () => {
+    const parsed = adminConversationQuerySchema.parse({
+      status: "open",
+      participantId: "12",
+      page: "2",
+      pageSize: "40",
+    });
+    expect(parsed.participantId).toBe(12);
+    expect(parsed.page).toBe(2);
+    expect(parsed.pageSize).toBe(40);
+    expect(adminConversationQuerySchema.safeParse({ status: "deleted" }).success).toBe(false);
+  });
+
+  it("requires an access purpose before chat content can be viewed", () => {
+    expect(adminConversationAccessSchema.safeParse({ reason: "Support review" }).success).toBe(true);
+    expect(adminConversationAccessSchema.safeParse({ reason: "  " }).success).toBe(false);
+    expect(adminConversationAccessSchema.safeParse({}).success).toBe(false);
   });
 });
 

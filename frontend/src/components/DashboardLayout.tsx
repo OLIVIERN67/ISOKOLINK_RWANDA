@@ -5,6 +5,7 @@ import {
   Bell,
   Bookmark,
   ClipboardCheck,
+  Eye,
   Flag,
   Home,
   LayoutDashboard,
@@ -299,6 +300,7 @@ function buildGroups(variant: Variant, isSeller: boolean, t: (key: string) => st
         title: t("dashboard.group.people"),
         items: [
           { to: "/admin/users", label: t("dashboard.nav.users"), icon: Users },
+          { to: "/admin/chats", label: t("dashboard.nav.chatMonitoring"), icon: Eye },
           { to: "/admin/conversations", label: t("dashboard.nav.messages"), icon: MessagesSquare, badge: "messages" },
           { to: "/admin/notifications", label: t("dashboard.nav.notifications"), icon: Bell, badge: "notifications" },
         ],

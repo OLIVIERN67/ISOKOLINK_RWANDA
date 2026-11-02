@@ -161,8 +161,10 @@ The UI surfaces these links on the register, forgot-password and profile screens
 - Dashboard with Recharts activity charts and recent activity
 - Product moderation: approve, reject, request correction, suspend, reinstate,
   feature, inspect approval history, and message sellers
-- User management: search, filter, suspend/reactivate, grant/revoke roles with
-  self-protection rules
+- User management: search, filter, suspend/reactivate, grant/revoke roles and
+  securely reset passwords with self-protection rules
+- Chat monitoring: review buyer and seller conversations with an access purpose,
+  read-only message history and `conversation.viewed` audit logging
 - Reports queue with resolution notes and reporter notifications
 - Market price observations CRUD
 - Categories, markets, locations and units management
@@ -205,6 +207,11 @@ parameters and role requirements.
 - Uploads accept only JPEG/PNG/WebP up to 5 MB and are served from
   `/uploads` with cache headers.
 - Admin actions write audit-log entries with actor, IP and metadata.
+- Administrator password resets hash a new password server-side, revoke the
+  user's sessions and pending reset links, notify the user, and never expose the
+  existing password hash.
+- Conversation monitoring is admin-only, read-only, and every chat review is
+  audit logged with its access purpose.
 - `EXPOSE_DEV_TOKENS` is forced off in production.
 
 ## Testing

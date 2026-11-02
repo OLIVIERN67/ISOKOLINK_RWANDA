@@ -7,9 +7,11 @@ import { ok } from "../../utils/http";
 import {
   approveProduct,
   changeUserRole,
+  getAdminConversation,
   getAdminProduct,
   getAdminUser,
   getDashboardStats,
+  listAdminConversations,
   listAdminProducts,
   listAdminUsers,
   listAuditLogs,
@@ -17,11 +19,15 @@ import {
   rejectProduct,
   reinstateProduct,
   requestProductCorrection,
+  resetUserPassword,
   setProductFeatured,
   suspendProduct,
   suspendUser,
 } from "./admin.service";
 import {
+  adminConversationAccessSchema,
+  adminConversationQuerySchema,
+  adminPasswordResetSchema,
   adminProductQuerySchema,
   adminUserQuerySchema,
   approveSchema,
@@ -40,6 +46,33 @@ adminRouter.use(requireAdmin);
 adminRouter.get(
   "/stats",
   asyncHandler(async (_req, res) => ok(res, await getDashboardStats())),
+);
+
+adminRouter.get(
+  "/conversations",
+  validate(adminConversationQuerySchema, "query"),
+  asyncHandler(async (req, res) => {
+    const result = await listAdminConversations(req.query as never);
+    return ok(res, result.items, 200, result.meta);
+  }),
+);
+
+adminRouter.get(
+  "/conversations/:id",
+  validate(idParams, "params"),
+  validate(adminConversationAccessSchema, "query"),
+  asyncHandler(async (req, res) => {
+    const query = req.query as never as { before?: number; limit: number; reason: string };
+    return ok(
+      res,
+      await getAdminConversation(
+        Number(req.params.id),
+        req.user!.id,
+        query,
+        req.ip,
+      ),
+    );
+  }),
 );
 
 adminRouter.get(
@@ -164,6 +197,23 @@ adminRouter.post(
         req.user!.id,
         req.body.role,
         req.body.action,
+        req.ip,
+      ),
+    ),
+  ),
+);
+
+adminRouter.post(
+  "/users/:id/reset-password",
+  validate(idParams, "params"),
+  validate(adminPasswordResetSchema),
+  asyncHandler(async (req, res) =>
+    ok(
+      res,
+      await resetUserPassword(
+        Number(req.params.id),
+        req.user!.id,
+        req.body.newPassword,
         req.ip,
       ),
     ),

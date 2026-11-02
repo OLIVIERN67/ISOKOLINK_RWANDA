@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
+  Eye,
+  EyeOff,
   KeyRound,
   MessageSquare,
   Package,
+  RefreshCw,
   ShieldAlert,
   ShieldCheck,
   Store,
@@ -20,7 +23,7 @@ import { PageHeader } from "../../components/ui/PageHeader";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { Modal } from "../../components/ui/Modal";
-import { Field, Textarea } from "../../components/ui/Field";
+import { Field, Input, Textarea } from "../../components/ui/Field";
 import { ErrorState, LoadingBlock } from "../../components/ui/States";
 import { Avatar } from "../../components/ui/Avatar";
 import { formatDate, formatDateTime, formatCurrency, approvalTone, APPROVAL_LABELS, REPORT_STATUS_LABELS } from "../../utils/format";
@@ -57,6 +60,11 @@ export function AdminUserDetailPage() {
   const [messageOpen, setMessageOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const userId = Number(id);
 
@@ -139,6 +147,61 @@ export function AdminUserDetailPage() {
     }
   }
 
+  function generatePassword() {
+    const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    const lower = "abcdefghijkmnopqrstuvwxyz";
+    const digits = "23456789";
+    const symbols = "!@#$%";
+    const all = `${upper}${lower}${digits}${symbols}`;
+    const values = new Uint32Array(16);
+    crypto.getRandomValues(values);
+    const chars = [
+      upper[values[0] % upper.length],
+      lower[values[1] % lower.length],
+      digits[values[2] % digits.length],
+      symbols[values[3] % symbols.length],
+      ...Array.from(values.slice(4), (value) => all[value % all.length]),
+    ];
+    for (let index = chars.length - 1; index > 0; index -= 1) {
+      const swapIndex = values[index] % (index + 1);
+      [chars[index], chars[swapIndex]] = [chars[swapIndex], chars[index]];
+    }
+    const generated = chars.join("");
+    setNewPassword(generated);
+    setConfirmPassword(generated);
+    setShowPassword(true);
+  }
+
+  async function resetPassword() {
+    if (!detail) return;
+    if (newPassword.length < 8) {
+      error("Password must be at least 8 characters.");
+      return;
+    }
+    if (!/[a-z]/.test(newPassword) || !/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      error("Password must include lowercase, uppercase, and numeric characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      error("The passwords do not match.");
+      return;
+    }
+    setResetting(true);
+    try {
+      const updated = await adminApi.resetUserPassword(detail.id, newPassword, confirmPassword);
+      setDetail(updated);
+      setResetOpen(false);
+      setNewPassword("");
+      setConfirmPassword("");
+      setShowPassword(false);
+      success("Password reset. Share the new password with the user through a secure channel.");
+    } catch (requestError) {
+      error(getApiError(requestError).message);
+    } finally {
+      setResetting(false);
+    }
+  }
+
   if (loading) return <LoadingBlock label="Loading user…" />;
   if (loadError) return <ErrorState message={loadError} />;
   if (!detail) return <ErrorState message="User not found." />;
@@ -156,6 +219,10 @@ export function AdminUserDetailPage() {
             <Link to="/admin/users" className="btn-outline">
               <ArrowLeft className="h-4 w-4" aria-hidden />
               Back to users
+            </Link>
+            <Link to={`/admin/chats?participantId=${detail.id}`} className="btn-outline">
+              <Eye className="h-4 w-4" aria-hidden />
+              Review chats
             </Link>
             <Button type="button" variant="outline" onClick={() => setMessageOpen(true)}>
               <MessageSquare className="h-4 w-4" aria-hidden />
@@ -349,6 +416,22 @@ export function AdminUserDetailPage() {
                     Revoke admin role
                   </Button>
                 )}
+                {!detail.roles.includes("admin") ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      setNewPassword("");
+                      setConfirmPassword("");
+                      setShowPassword(false);
+                      setResetOpen(true);
+                    }}
+                  >
+                    <KeyRound className="h-4 w-4" aria-hidden />
+                    Reset password
+                  </Button>
+                ) : null}
               </div>
             )}
           </section>
@@ -408,6 +491,84 @@ export function AdminUserDetailPage() {
             placeholder="Write a clear, professional message…"
           />
         </Field>
+      </Modal>
+
+      <Modal
+        open={resetOpen}
+        onClose={() => {
+          setResetOpen(false);
+          setNewPassword("");
+          setConfirmPassword("");
+          setShowPassword(false);
+        }}
+        title={`Reset password for ${detail.fullName}`}
+        description="The existing password is never displayed. Enter a new strong password, or generate one, then share it with the user through a secure channel."
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setResetOpen(false);
+                setNewPassword("");
+                setConfirmPassword("");
+                setShowPassword(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="button" loading={resetting} onClick={resetPassword}>
+              Reset password
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <Field
+            label="New password"
+            htmlFor="admin-new-password"
+            hint="At least 8 characters with uppercase, lowercase, and a number."
+            required
+          >
+            <div className="relative">
+              <Input
+                id="admin-new-password"
+                type={showPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                autoComplete="new-password"
+                className="pr-11"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((current) => !current)}
+                className="absolute right-1 top-1/2 -translate-y-1/2 rounded-lg p-2 text-charcoal/50 hover:bg-gray-100"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+              </button>
+            </div>
+          </Field>
+          <Field label="Confirm new password" htmlFor="admin-confirm-password" required>
+            <Input
+              id="admin-confirm-password"
+              type={showPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              autoComplete="new-password"
+            />
+          </Field>
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-cream/60 p-3">
+            <p className="text-[11px] leading-5 text-charcoal/55">
+              Resetting revokes all active sessions and invalidates pending reset links. The user is notified and this
+              action is audit logged.
+            </p>
+            <Button type="button" variant="outline" onClick={generatePassword}>
+              <RefreshCw className="h-4 w-4" aria-hidden />
+              Generate
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

@@ -131,6 +131,7 @@ const commonEn = {
   "dashboard.nav.locations": "Locations",
   "dashboard.nav.units": "Units",
   "dashboard.nav.users": "Users",
+  "dashboard.nav.chatMonitoring": "Chat monitoring",
   "dashboard.nav.announcements": "Announcements",
   "dashboard.nav.auditLogs": "Audit logs",
   "dashboard.nav.publicSite": "Public site",

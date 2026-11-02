@@ -2,6 +2,8 @@ import axios, { AxiosError } from "axios";
 import { currentLanguage, translateCurrent } from "../i18n";
 import { resolveApiBaseUrl } from "../utils/apiBase";
 import type {
+  AdminConversationDetail,
+  AdminConversationSummary,
   AdminStats,
   AdminUserDetail,
   AdminUserSummary,
@@ -285,12 +287,25 @@ export const adminApi = {
   users: async (params: Record<string, unknown> = {}) =>
     list(await api.get<ApiEnvelope<AdminUserSummary[]>>("/admin/users", { params })),
   user: async (id: number) => unwrap(await api.get<ApiEnvelope<AdminUserDetail>>(`/admin/users/${id}`)),
+  resetUserPassword: async (id: number, newPassword: string, confirmPassword: string) =>
+    unwrap(
+      await api.post<ApiEnvelope<AdminUserDetail>>(`/admin/users/${id}/reset-password`, {
+        newPassword,
+        confirmPassword,
+      }),
+    ),
   suspendUser: async (id: number, reason: string) =>
     unwrap(await api.post<ApiEnvelope<AdminUserDetail>>(`/admin/users/${id}/suspend`, { reason })),
   reactivateUser: async (id: number) =>
     unwrap(await api.post<ApiEnvelope<AdminUserDetail>>(`/admin/users/${id}/reactivate`)),
   changeRole: async (id: number, role: "admin" | "seller", action: "grant" | "revoke") =>
     unwrap(await api.post<ApiEnvelope<AdminUserDetail>>(`/admin/users/${id}/roles`, { role, action })),
+  conversations: async (params: Record<string, unknown> = {}) =>
+    list(await api.get<ApiEnvelope<AdminConversationSummary[]>>("/admin/conversations", { params })),
+  conversation: async (id: number, params: { reason?: string; before?: number; limit?: number } = {}) =>
+    unwrap(
+      await api.get<ApiEnvelope<AdminConversationDetail>>(`/admin/conversations/${id}`, { params }),
+    ),
   reports: async (params: Record<string, unknown> = {}) =>
     list(await api.get<ApiEnvelope<ReportItem[]>>("/admin/reports", { params })),
   updateReport: async (id: number, status: string, resolutionNote?: string) =>

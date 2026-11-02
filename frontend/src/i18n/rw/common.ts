@@ -131,6 +131,7 @@ const commonRw = {
   "dashboard.nav.locations": "Ahantu",
   "dashboard.nav.units": "Ibipimo",
   "dashboard.nav.users": "Abakoresha",
+  "dashboard.nav.chatMonitoring": "Igenzura ry'ibiganiro",
   "dashboard.nav.announcements": "Amatangazo",
   "dashboard.nav.auditLogs": "Inyandiko z'igenzura",
   "dashboard.nav.publicSite": "Urubuga rusange",

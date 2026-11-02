@@ -53,6 +53,7 @@ const AdminLocationsPage = lazyNamed(() => import("./pages/admin/AdminLocationsP
 const AdminUnitsPage = lazyNamed(() => import("./pages/admin/AdminUnitsPage"), "AdminUnitsPage");
 const AdminUsersPage = lazyNamed(() => import("./pages/admin/AdminUsersPage"), "AdminUsersPage");
 const AdminUserDetailPage = lazyNamed(() => import("./pages/admin/AdminUserDetailPage"), "AdminUserDetailPage");
+const AdminConversationsPage = lazyNamed(() => import("./pages/admin/AdminConversationsPage"), "AdminConversationsPage");
 const AdminAnnouncementsPage = lazyNamed(() => import("./pages/admin/AdminAnnouncementsPage"), "AdminAnnouncementsPage");
 const AdminAuditLogsPage = lazyNamed(() => import("./pages/admin/AdminAuditLogsPage"), "AdminAuditLogsPage");
 
@@ -127,6 +128,8 @@ export function App() {
               <Route path="units" element={<AdminUnitsPage />} />
               <Route path="users" element={<AdminUsersPage />} />
               <Route path="users/:id" element={<AdminUserDetailPage />} />
+              <Route path="chats" element={<AdminConversationsPage />} />
+              <Route path="chats/:id" element={<AdminConversationsPage />} />
               <Route path="conversations" element={<ConversationsView basePath="/admin/conversations" />} />
               <Route path="conversations/:id" element={<ConversationsView basePath="/admin/conversations" />} />
               <Route path="notifications" element={<NotificationsView />} />

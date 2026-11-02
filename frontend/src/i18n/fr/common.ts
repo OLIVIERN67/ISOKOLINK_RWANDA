@@ -131,6 +131,7 @@ const commonFr = {
   "dashboard.nav.locations": "Localités",
   "dashboard.nav.units": "Unités",
   "dashboard.nav.users": "Utilisateurs",
+  "dashboard.nav.chatMonitoring": "Surveillance des chats",
   "dashboard.nav.announcements": "Annonces administratives",
   "dashboard.nav.auditLogs": "Journaux d'audit",
   "dashboard.nav.publicSite": "Site public",
