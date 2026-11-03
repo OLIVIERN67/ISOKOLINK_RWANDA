@@ -293,6 +293,12 @@ export function ProductDetailPage() {
                   aria-label={t("common.contactWhatsAppProduct", { seller: sellerName, product: product.name })}
                 />
               ) : null}
+              {!isOwner && product.seller.phone ? (
+                <a href={`tel:${product.seller.phone}`} className="btn-outline w-full" aria-label={`Call ${sellerName}`}>
+                  <Phone className="h-4 w-4" aria-hidden />
+                  Call seller
+                </a>
+              ) : null}
               <Button type="button" variant="outline" onClick={shareProduct}>
                 <Share2 className="h-4 w-4" aria-hidden />
                 Share
@@ -340,8 +346,10 @@ export function ProductDetailPage() {
               {product.seller.district ? (
                 <p className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-forest-500" aria-hidden />{product.seller.district}</p>
               ) : null}
-              {product.seller.phone ? (
-                <p className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-forest-500" aria-hidden />{product.seller.phone}</p>
+              {product.seller.phone && product.seller.publicContactVisible ? (
+                <a href={`tel:${product.seller.phone}`} className="flex items-center gap-1.5 hover:text-forest-700">
+                  <Phone className="h-3.5 w-3.5 text-forest-500" aria-hidden />{product.seller.phone}
+                </a>
               ) : null}
             </div>
             <div className="mt-4 flex gap-2">

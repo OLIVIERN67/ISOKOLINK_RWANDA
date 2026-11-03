@@ -56,7 +56,8 @@ export const PRODUCT_SELECT = `
          p.market_id, m.name AS market_name,
          p.seller_id, su.status AS seller_account_status, su.full_name AS seller_full_name,
          sp.business_name AS seller_business_name,
-         sp.profile_image_url AS seller_profile_image, sp.contact_phone AS seller_phone,
+         sp.profile_image_url AS seller_profile_image,
+         COALESCE(su.phone, sp.contact_phone) AS seller_phone,
          sp.public_contact_visibility AS seller_contact_visible, sp.description AS seller_description,
          sp.location_id AS seller_location_id, sl.name AS seller_district_name, sp.status AS seller_status,
          (SELECT pi.url FROM product_images pi WHERE pi.product_id = p.id

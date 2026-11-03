@@ -65,3 +65,18 @@ export function productWhatsAppUrl(product: Product, productUrl: string, languag
 
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
+
+export function sellerWhatsAppUrl(
+  phone: string | null | undefined,
+  sellerName: string,
+  language: Language = "en",
+): string | null {
+  const normalizedPhone = toWhatsAppNumber(phone);
+  if (!normalizedPhone) return null;
+  const greeting = language === "fr"
+    ? `Bonjour ${sellerName}, je souhaite vous contacter au sujet de vos produits sur ISOKOLINK.`
+    : language === "rw"
+      ? `Muraho ${sellerName}, ndifuza kubavugisha ku bicuruzwa byanyu kuri ISOKOLINK.`
+      : `Hello ${sellerName}, I would like to contact you about your products on ISOKOLINK.`;
+  return `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(greeting)}`;
+}

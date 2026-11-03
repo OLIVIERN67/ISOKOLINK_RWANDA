@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Facebook, Instagram, Mail, MapPin, Phone, Twitter } from "lucide-react";
 import { useI18n } from "../context/I18nContext";
 import { Logo } from "./Logo";
+import { OFFICIAL_CONTACT } from "../config/contact";
 
 export function Footer() {
   const { t } = useI18n();
@@ -55,8 +56,14 @@ export function Footer() {
           </ul>
           <div className="mt-4 space-y-2 text-xs text-charcoal/55">
             <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-forest-500" aria-hidden /> Kigali, Rwanda</p>
-            <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-forest-500" aria-hidden /> +250 788 000 000</p>
-            <p className="flex items-center gap-2"><Mail className="h-3.5 w-3.5 text-forest-500" aria-hidden /> hello@isokolink.rw</p>
+            {OFFICIAL_CONTACT.phones.map((phone) => (
+              <a key={phone} href={`tel:${phone}`} className="flex items-center gap-2 hover:text-forest-700">
+                <Phone className="h-3.5 w-3.5 text-forest-500" aria-hidden /> {phone}
+              </a>
+            ))}
+            <a href={`mailto:${OFFICIAL_CONTACT.email}`} className="flex items-center gap-2 hover:text-forest-700">
+              <Mail className="h-3.5 w-3.5 text-forest-500" aria-hidden /> {OFFICIAL_CONTACT.email}
+            </a>
           </div>
         </div>
       </div>
